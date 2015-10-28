@@ -24,35 +24,41 @@ enum queryType {
 class attributeDetail {
 public:
   attributeType type;
-  # attribute type
   int length;
-  # if type == CHARTYPE, it must have length
   bool unique;
-  # it is unique or not
   bool primary;
-  # it is primary key or not
   attributeDetail(attributeType type, int length = 0, bool unique = false, bool primary = false) : type(type), length(length), unique(unique), primary(primary) {};
-  # constructor
+  /* type: attribute type
+   * length: if type == CHARTYPE, it must have length
+   * unique: it is unique or not
+   * primary: it is primary key or not
+   * attribute type
+   * attributeDetail: constructor
+  */
 };
 
 class valueDetail {
 public:
   attributeType type;
-  # value type
   string value;
-  # all the value saved as string
   valueDetail(attributeType type, string value) : type(type), value(value) {};
-  # constructor
+  /* type: value type
+   * value: all the value saved as string
+   * valueDetail: constructor
+  */
 };
 
 class queryDetail {
 public:
   queryType type;
-  # query type
   valueDetail val;
-  # the value of the restraint
+  int targetPosition;
   queryDetail(queryType type, valueDetail val) : queryType(type), valueDetail(value) {};
-  # constructor
+  /* type: query type
+   * val: the value of the restraint
+   * targetPosition: the attribute position in the table.
+   * queryDetail: constructor
+  */
 };
 
 ```
