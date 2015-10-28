@@ -80,7 +80,7 @@ bool select(string tableName, vector<queryDetail> queryList);
 
 bool insert(string tableName, vector<valueDetail> valueList);
 
-bool delete(string tableName, vector<queryDetial> queryList);
+bool deleteAttribute(string tableName, vector<queryDetial> queryList);
 ```
 
 ## Catalog Manager
@@ -123,7 +123,7 @@ bool select(string tableName, vector<queryDetial> queryList);
 
 bool insert(string tableName, vector<valueDetail> valueList);
 
-bool delete(string tableName, vector<queryDetial> queryList);
+bool deleteAttribute(string tableName, vector<queryDetial> queryList);
 ```
 
 ## Index Manager
