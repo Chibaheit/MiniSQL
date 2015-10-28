@@ -21,6 +21,27 @@ enum queryType {
 };
 
 
+class Schema{
+public:
+    Strings attributeName;
+    vector<attributeType> attrType;
+    vector<Size> attributeSize;
+    Schema();
+};
+
+class Attribute{
+public:
+    string value;
+    attributeType type;
+    Attribute();
+};
+
+class Table{
+public:
+    vector<Attribute> attributes;
+    Table();
+};
+
 class attributeDetail {
 public:
   attributeType type;
@@ -72,7 +93,7 @@ bool createIndex(string tableName, string attributeName, Strings indexList);
 
 bool dropIndex(string indexName);
 
-bool select(string tableName, vector<queryDetail> queryList);
+Table& select(string tableName, vector<queryDetail> queryList);
 
 bool insert(string tableName, vector<valueDetail> valueList);
 
@@ -86,7 +107,7 @@ bool deleteAttribute(string tableName, vector<queryDetial> queryList);
 the first three is for interpreter to check whether a  table, a attribute, an index exist(if existing, return true)
 so that the interpreter can judge whether a SQL sentence is right
 
-the last four is for API to get size or other useful information of a table or attribute
+the last two is for API to get size or other useful information of a table or attribute
 so that the API can do optimize
 */
 bool checkTableExist(string tableName);
@@ -95,13 +116,9 @@ bool checkAttributeExist(string tableName, string attributeName);
 
 bool checkIndexExist(string indexName);
 // for drop index
-Size getTableSize(string tableName);
-
-Sizes getAttributeSize(string tableName, Strings attributeName);
+TableInfo getTableInfo(string tableName);
 
 Strings getIndexList(string tableName,Strings attributeName);
-
-Strings getAttributeType(string tableName);
 
 ```
 
@@ -115,7 +132,7 @@ bool createTable(string tableName, vector<attributeDetail> attributeList);
 
 bool dropTable(string tableName);
 
-bool select(string tableName, vector<queryDetial> queryList);
+Table select(string tableName, vector<queryDetail> queryList);
 
 bool insert(string tableName, vector<valueDetail> valueList);
 
