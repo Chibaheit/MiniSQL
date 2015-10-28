@@ -51,6 +51,8 @@ public:
   # query type
   valueDetail val;
   # the value of the restraint
+  int position;
+  # the position of the corresponding attribute
   queryDetail(queryType type, valueDetail val) : queryType(type), valueDetail(value) {};
   # constructor
 };
@@ -74,7 +76,7 @@ bool select(string tableName, vector<queryDetail> queryList);
 
 bool insert(string tableName, vector<valueDetail> valueList);
 
-bool delete(string tableName, vector<queryDetial> queryList);
+bool deleteAttribute(string tableName, vector<queryDetial> queryList);
 ```
 
 ## Catalog Manager
@@ -117,7 +119,7 @@ bool select(string tableName, vector<queryDetial> queryList);
 
 bool insert(string tableName, vector<valueDetail> valueList);
 
-bool delete(string tableName, vector<queryDetial> queryList);
+bool deleteAttribute(string tableName, vector<queryDetial> queryList);
 ```
 
 ## Index Manager
