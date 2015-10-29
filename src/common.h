@@ -146,14 +146,22 @@ private:
     FILE *m_file;
     bool dirty;
 public:
-    void open(FILE *file, Size offset, Size size){
+    void writeBack() {
+        if (dirty) {
+            fseek(m_file, m_offset, SEEK_SET);
+            fwrite(m_data, 1, size, file);
+            dirty = 0;
+        }
+    }
+    void open(FILE *file, Size offset, Size size) {
+        writeBack();
         m_file = file;
         m_offset = offset;
         m_size = size;
         fseek(file, offset, SEEK_SET);
         fread(m_data, 1, size, file);
     }
-    Block(FILE *file, Size offset, Size size): dirty(false){
+    Block(FILE *file, Size offset, Size size): dirty(false) {
         m_data = new char[size];
         open(file, offset, size);
     }
@@ -167,7 +175,8 @@ public:
         dirty = true;
         return m_data;
     }
-    ~Block(){
+    ~Block() {
+        writeBack();
         delete [] m_data;
     }
 };
