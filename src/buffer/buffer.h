@@ -17,7 +17,7 @@ private:
     };
 
 public:
-    static Buffer *buffer;
+    static Buffer *instance;
     ~Buffer() {
         for (int i = 0; i < m_size; ++i)
             if (m_blocks[i]) delete m_blocks[i];
