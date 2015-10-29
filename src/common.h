@@ -1,9 +1,15 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <bits/stdc++.h>
+#include <cstring>
 
 using namespace std;
+
+#ifdef DEBUG
+    #define debug(args...) fprintf(stderr, args)
+#else
+    #define debug(args...)
+#endif
 
 typedef unsigned int Size;
 typedef vector<Size> Sizes;
@@ -149,7 +155,7 @@ public:
     void writeBack() {
         if (dirty) {
             fseek(m_file, m_offset, SEEK_SET);
-            fwrite(m_data, 1, size, file);
+            fwrite(m_data, 1, m_size, m_file);
             dirty = 0;
         }
     }
@@ -168,7 +174,7 @@ public:
     Size size() const {
         return m_size;
     }
-    const char *const_data() const {
+    const char *constData() const {
         return m_data;
     }
     char *data() {
