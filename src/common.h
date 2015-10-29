@@ -1,3 +1,6 @@
+#ifndef COMMON_H
+#define COMMON_H
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -186,3 +189,5 @@ public:
         delete [] m_data;
     }
 };
+
+#endif

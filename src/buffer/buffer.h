@@ -1,3 +1,6 @@
+#ifndef BUFFER_H
+#define BUFFER_H
+
 #include "../common.h"
 #include <unordered_map>
 
@@ -23,5 +26,7 @@ public:
             if (m_blocks[i]) delete m_blocks[i];
         delete [] m_blocks;
     }
-    Block *access(const string &filePath, unsigned blockIndex);
+    Block *access(const string &filePath, unsigned blockIndex, bool pinned = false);
 };
+
+#endif
