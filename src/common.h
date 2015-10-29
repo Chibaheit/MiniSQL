@@ -85,24 +85,35 @@ public:
 	virtual ~SingleValue(){};
 	virtual bool operator==(const Value &rhs) const {
 		auto r = dynamic_cast<const SingleValue<T>&>(rhs);
-		return data==r.data;
+		return data == r.data;
 	}
 	virtual bool operator<(const Value &rhs) const {
 		auto r = dynamic_cast<const SingleValue<T>&>(rhs);
-		return data<r.data;
-	}
-	virtual void memoryCopy(void *dest) const {
-		memcpy(dest, &data, sizeof(T));
+		return data < r.data;
 	}
 	virtual Size size() const {
 		return sizeof(T);
 	}
+	virtual void memoryCopy(void *dest) const {
+		memcpy(dest, &data, size());
+	}
 	virtual void print(ostream &out) const {
-		out<<data;
+		out << data;
 	}
 };
 typedef SingleValue<int> Int;
 typedef SingleValue<float> Float;
+typedef SingleValue<string> String;
+
+template<>
+Size String::size() const {
+    return data.size();
+}
+
+template<>
+void String::memoryCopy(void *dest) const {
+    strcpy((char*)dest, data.data());
+}
 
 class valueDetail {
 public:

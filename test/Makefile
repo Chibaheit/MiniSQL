@@ -3,15 +3,19 @@ COMMON_OBJS :=
 CC := g++
 COP := -std=c++11 -Ofast
 
-TARGET := testInt.exe
+TARGET := testInt.exe testFloat.exe testString.exe
+RUN := testInt.run testFloat.run testString.run
 
-all: $(TARGET)
+all: $(TARGET) $(RUN)
 
 %.o: %.cpp $(COMMON_HEADERS)
 	$(CC) $(COP) $< -c -o $@
 
 %.exe: %.o
 	$(CC) $(COP) $< $(COMMON_OBJS) -o $@
+
+%.run: %.exe
+	./$<
 
 clean_o:
 	rm -f *.o
