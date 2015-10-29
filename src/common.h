@@ -138,3 +138,36 @@ public:
      * queryDetail: constructor
     */
 };
+
+class Block {
+private:
+    Size m_size, m_offset;
+    char *m_data;
+    FILE *m_file;
+    bool dirty;
+public:
+    void open(FILE *file, Size offset, Size size){
+        m_file = file;
+        m_offset = offset;
+        m_size = size;
+        fseek(file, offset, SEEK_SET);
+        fread(m_data, 1, size, file);
+    }
+    Block(FILE *file, Size offset, Size size): dirty(false){
+        m_data = new char[size];
+        open(file, offset, size);
+    }
+    Size size() const {
+        return m_size;
+    }
+    const char *const_data() const {
+        return m_data;
+    }
+    char *data() {
+        dirty = true;
+        return m_data;
+    }
+    ~Block(){
+        delete [] m_data;
+    }
+};
