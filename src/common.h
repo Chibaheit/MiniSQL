@@ -89,7 +89,8 @@ class SingleValue: public Value {
 private:
 	T data;
 public:
-	SingleValue(T x);
+	SingleValue(T x): data(x) {}
+    SingleValue(const char *mem): data(*(const T*)mem) {}
 	virtual ~SingleValue();
 	virtual bool operator==(const Value &rhs) const;
 	virtual bool operator<(const Value &rhs) const;
@@ -100,6 +101,26 @@ public:
 typedef SingleValue<int> Int;
 typedef SingleValue<float> Float;
 typedef SingleValue<string> String;
+
+class Type {
+private:
+    attributeType type;
+    unsigned size;
+public:
+    Type(attributeType type, unsigned size): type(type), size(size) {}
+    Value *create(const char *mem) const {
+        switch (type) {
+            case INTTYPE: return new Int(mem);
+            case FLOATTYPE: return new Float(mem);
+            case CHARTYPE: return new String(mem);
+            default: assert(0 && "unknown type");
+        }
+    }
+    // the number of bytes
+    unsigned getSize() const {
+        return size;
+    }
+};
 
 class valueDetail {
 public:

@@ -5,6 +5,48 @@
 #include "../buffer/buffer.h"
 #include <utility>
 
+const int szInt = sizeof(int);
+
+class Node {
+private:
+    Block *m_block;
+    Type m_key_type;
+    bool isLeaf;
+    unsigned n, unitSize;
+    void init() {
+        unsigned sz = block->size();
+        unsigned skey = m_key_type->size();
+        isLeaf = block->constData()[sz - 1];
+        unitSize = skey + szInt;
+        n = (m_block->size() - szInt - 1) / unitSize;
+    }
+public:
+    // open an existing Node Block
+    Node(Block *block, Type key_type):
+        m_block(block), m_key_type(key_type) {
+        init();
+    }
+    // initialize a new Node Block
+    Node(Block *block, Type key_type, bool isLeaf):
+        m_block(block), m_key_type(key_type), isLeaf(isLeaf) {
+        block->data()[sz - 1] = isLeaf;
+        *(unsigned *)block->data() = 0;
+        init();
+        unitSize = m_key_type->size() + szInt;
+    }
+    Value *getKey(int i) const {
+        assert(i>=0 && i<n);
+        return m_key_type.create(
+            m_block->constData() + unitSize * i + szInt;
+        );
+    }
+    unsigned getPtr(int i) const {
+        assert(i>=0 && i<=n);
+        const char *mem = m_block->constData() + unitSize * i;
+        return *(unsigned *)mem;
+    }
+};
+
 class Index {
 private:
     attributeDetail m_attr;
@@ -18,7 +60,6 @@ public:
 
     class Iterator {
         Iterator operator++();
-        Iterator operator--();
         bool operator==(const Iterator &rhs) const;
         Value *key() const;
         unsigned value() const;

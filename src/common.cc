@@ -35,8 +35,10 @@ void SingleValue<T>::print(ostream &out) const {
 	out << data;
 }
 
-template <class T>
-SingleValue<T>::SingleValue(T x):data(x){}
+template <>
+String::SingleValue(const char *mem) {
+	data = mem;
+}
 
 template <class T>
 SingleValue<T>::~SingleValue(){}
