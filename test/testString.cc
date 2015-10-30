@@ -23,5 +23,5 @@ int main(){
     delete x;
     delete y;
     delete z;
-    cout<<"String passed all test cases!"<<endl;
+    cout<<"String: OK!\n"<<endl;
 }

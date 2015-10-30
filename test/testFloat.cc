@@ -23,5 +23,5 @@ int main(){
     delete x;
     delete y;
     delete z;
-    cout<<"Float passed all test cases!"<<endl;
+    cout<<"Float: OK!\n"<<endl;
 }

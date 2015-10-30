@@ -8,7 +8,11 @@ Buffer::Buffer(unsigned size, unsigned block_size):
 }
 
 Buffer *Buffer::Singleton::initBuffer() {
-    return new Buffer(1024, 4096);
+    debug("Initializing buffer with num blocks = %d block size = %d ...",
+          defaultNumBlocks, defaultBlockSize);
+    Buffer *buffer = new Buffer(defaultNumBlocks, defaultBlockSize);
+    debug("OK\n");
+    return buffer;
 }
 
 Buffer *Buffer::inst = Buffer::Singleton::initBuffer();
@@ -19,50 +23,66 @@ inline unsigned nxt(unsigned &x, unsigned n){
     return t;
 }
 
-unsigned Buffer::getNewBlock(FILE *file, unsigned blockIndex,
+unsigned Buffer::getNewBlock(FILE *file, unsigned offset,
                      unsigned blockSize, bool pinned) {
-    for(;; nxt(m_now, m_size)) {
+    for(;1; nxt(m_now, m_size)) {
         Block *&block = m_blocks[m_now];
         if (block == NULL) {
-            block = new Block(file, blockIndex, blockSize);
+            debug("Empty block %d found\n", m_now);
+            block = new Block(file, offset, blockSize);
             block->pin(pinned);
             return nxt(m_now, m_size);
         } else if (block->isRecent()) {
+            //debug("Block %d is not recent any more.\n", m_now);
             block->setRecent(0);
         } else if (!block->isPinned()) {
-            block->open(file, blockIndex, blockSize);
+            debug("Replace block %d.\n", m_now);
+            block->open(file, offset, blockSize);
+            block->pin(pinned);
             return nxt(m_now, m_size);
         }
     }
+    assert(0);
 };
 
 Block *Buffer::access(const string &filePath,
                       unsigned blockIndex, bool pinned) {
-    return inst->m_access(filePath, blockIndex, pinned);
+    debug("Accessing \"%s\" %d\n", filePath.c_str(), blockIndex);
+    return inst->m_access(filePath, blockIndex * inst->m_block_size, pinned);
 }
 
 Block *Buffer::m_access(const string &filePath,
-                      unsigned blockIndex, bool pinned) {
-    auto file = m_dictionary.find(filePath);
-    if (file == m_dictionary.end()) {
-        FILE *fp = fopen(filePath.c_str(), "rb+");
-        if (fp == NULL) {
+                      unsigned offset, bool pinned) {
+
+    auto file = m_files.find(filePath);
+    FILE *fp = NULL;
+    if (file == m_files.end()) {
+        if ((fp = fopen(filePath.c_str(), "rb+")) == NULL) {
             assert(fp = fopen(filePath.c_str(), "wb+"));
         }
-        m_dictionary[filePath].first = fp;
-        file = m_dictionary.find(filePath);
-    }
+        debug("File %s: %p\n", filePath.c_str(), fp);
+        m_files[filePath] = fp;
+        m_dictionary[fp];
+    } else fp = file->second;
+    assert(fp);
 
-    auto &table = file->second.second;
-    auto entry = table.find(blockIndex);
+    auto &table = m_dictionary.find(fp)->second;
+    auto entry = table.find(offset);
     if (entry == table.end()) {
-        table[blockIndex] = getNewBlock(file->second.first, blockIndex,
-                                        m_block_size, pinned);
-        entry = table.find(blockIndex);
+        table[offset] = getNewBlock(
+            fp,
+            offset,
+            m_block_size,
+            pinned
+        );
+        entry = table.find(offset);
     }
 
     Block *block = m_blocks[entry->second];
     block->pin(pinned);
+
+    inst->printOpenedBlocks();
+
     return block;
 }
 
@@ -75,7 +95,22 @@ Buffer::~Buffer() {
     for (int i = 0; i < m_size; ++i)
         if (m_blocks[i]) delete m_blocks[i];
     delete [] m_blocks;
-    for (auto &file: m_dictionary) {
-        fclose(file.second.first);
+    for (auto &file: m_files) {
+        fclose(file.second);
     }
+}
+
+void Block::open(FILE *file, unsigned offset, unsigned size) {
+    if (m_file) {
+        writeBack();
+        debug("%p %u\n", m_file, m_offset);
+        assert(Buffer::inst->m_dictionary[m_file].erase(m_offset));
+    }
+	m_file = file;
+	m_offset = offset;
+	m_size = size;
+	m_recent = true;
+	m_dirty = m_pinned = false;
+	assert(fseek(file, offset, SEEK_SET)==0);
+	fread(m_data, 1, size, file);
 }

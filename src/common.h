@@ -5,9 +5,11 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <cassert>
 
 using namespace std;
 
+#define DEBUG
 #ifdef DEBUG
     #define debug(args...) fprintf(stderr, args)
 #else
@@ -121,70 +123,6 @@ public:
      * targetPosition: the attribute position in the table.
      * queryDetail: constructor
     */
-};
-
-class Buffer;
-class Block {
-private:
-    Size m_size, m_offset;
-    char *m_data;
-    FILE *m_file;
-    bool m_dirty, m_pinned, m_recent;
-    void writeBack() {
-        if (m_dirty) {
-            fseek(m_file, m_offset, SEEK_SET);
-            fwrite(m_data, 1, m_size, m_file);
-            m_dirty = 0;
-        }
-    }
-    void open(FILE *file, Size offset, Size size) {
-        writeBack();
-        m_file = file;
-        m_offset = offset;
-        m_size = size;
-        m_recent = true;
-        m_dirty = m_pinned = false;
-        fseek(file, offset, SEEK_SET);
-        fread(m_data, 1, size, file);
-    }
-    Block(FILE *file, Size offset, Size size) {
-        m_data = new char[size];
-        open(file, offset, size);
-    }
-    void pin(bool pinned) {
-        m_pinned = pinned;
-    }
-    void setRecent(bool recent) {
-        m_recent = recent;
-    }
-    bool isRecent() const {
-        return m_recent;
-    }
-    friend Buffer;
-public:
-    // returns block size, default is 4096
-    Size size() const {
-        return m_size;
-    }
-    // retrieve constant pointer to data
-    const char *constData() {
-        m_recent = true;
-        return m_data;
-    }
-    // retrieve pointer to data
-    char *data() {
-        m_recent = m_dirty = true;
-        return m_data;
-    }
-    // automatic write back when destroyed
-    ~Block() {
-        writeBack();
-        delete [] m_data;
-    }
-    // check whether the block is pinned in the buffer
-    bool isPinned() const {
-        return m_pinned;
-    }
 };
 
 #endif
