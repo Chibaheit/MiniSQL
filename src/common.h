@@ -128,13 +128,13 @@ private:
     Size m_size, m_offset;
     char *m_data;
     FILE *m_file;
-    bool dirty;
+    bool m_dirty, m_pinned, m_recent;
 public:
     void writeBack() {
-        if (dirty) {
+        if (m_dirty) {
             fseek(m_file, m_offset, SEEK_SET);
             fwrite(m_data, 1, m_size, m_file);
-            dirty = 0;
+            m_dirty = 0;
         }
     }
     void open(FILE *file, Size offset, Size size) {
@@ -142,26 +142,41 @@ public:
         m_file = file;
         m_offset = offset;
         m_size = size;
+        m_recent = true;
+        m_dirty = m_pinned = false;
         fseek(file, offset, SEEK_SET);
         fread(m_data, 1, size, file);
     }
-    Block(FILE *file, Size offset, Size size): dirty(false) {
+    Block(FILE *file, Size offset, Size size) {
         m_data = new char[size];
         open(file, offset, size);
     }
     Size size() const {
         return m_size;
     }
-    const char *constData() const {
+    const char *constData() {
+        m_recent = true;
         return m_data;
     }
     char *data() {
-        dirty = true;
+        m_recent = m_dirty = true;
         return m_data;
     }
     ~Block() {
         writeBack();
         delete [] m_data;
+    }
+    void pin(bool pinned) {
+        m_pinned = pinned;
+    }
+    bool isPinned() const {
+        return m_pinned;
+    }
+    void setRecent(bool recent) {
+        m_recent = recent;
+    }
+    bool isRecent() const {
+        return m_recent;
     }
 };
 
