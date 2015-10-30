@@ -1,6 +1,12 @@
 #include "buffer.h"
 #include <cassert>
 
+Buffer::Buffer(unsigned size, unsigned block_size):
+    m_size(size), m_block_size(block_size), m_now(0) {
+    m_blocks = new Block*[size];
+    memset(m_blocks, 0, sizeof(Block*) * m_size);
+}
+
 Buffer *Buffer::Singleton::initBuffer() {
     return new Buffer(1024, 4096);
 }
@@ -31,6 +37,11 @@ unsigned Buffer::getNewBlock(FILE *file, unsigned blockIndex,
 };
 
 Block *Buffer::access(const string &filePath,
+                      unsigned blockIndex, bool pinned) {
+    return inst->m_access(filePath, blockIndex, pinned);
+}
+
+Block *Buffer::m_access(const string &filePath,
                       unsigned blockIndex, bool pinned) {
     auto file = m_dictionary.find(filePath);
     if (file == m_dictionary.end()) {

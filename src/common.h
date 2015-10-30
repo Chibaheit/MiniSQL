@@ -123,13 +123,13 @@ public:
     */
 };
 
+class Buffer;
 class Block {
 private:
     Size m_size, m_offset;
     char *m_data;
     FILE *m_file;
     bool m_dirty, m_pinned, m_recent;
-public:
     void writeBack() {
         if (m_dirty) {
             fseek(m_file, m_offset, SEEK_SET);
@@ -151,32 +151,39 @@ public:
         m_data = new char[size];
         open(file, offset, size);
     }
-    Size size() const {
-        return m_size;
-    }
-    const char *constData() {
-        m_recent = true;
-        return m_data;
-    }
-    char *data() {
-        m_recent = m_dirty = true;
-        return m_data;
-    }
-    ~Block() {
-        writeBack();
-        delete [] m_data;
-    }
     void pin(bool pinned) {
         m_pinned = pinned;
-    }
-    bool isPinned() const {
-        return m_pinned;
     }
     void setRecent(bool recent) {
         m_recent = recent;
     }
     bool isRecent() const {
         return m_recent;
+    }
+    friend Buffer;
+public:
+    // returns block size, default is 4096
+    Size size() const {
+        return m_size;
+    }
+    // retrieve constant pointer to data
+    const char *constData() {
+        m_recent = true;
+        return m_data;
+    }
+    // retrieve pointer to data
+    char *data() {
+        m_recent = m_dirty = true;
+        return m_data;
+    }
+    // automatic write back when destroyed
+    ~Block() {
+        writeBack();
+        delete [] m_data;
+    }
+    // check whether the block is pinned in the buffer
+    bool isPinned() const {
+        return m_pinned;
     }
 };
 
