@@ -1,7 +1,7 @@
 COMMON_HEADERS := common.h
 COMMON_OBJS :=
 CC := g++
-COP := -std=c++11 -O1
+COP := -std=c++11
 
 TARGET := common.o buffer/buffer.o
 
