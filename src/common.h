@@ -71,58 +71,33 @@ public:
 };
 
 class Value {
-private:
-	virtual void print(ostream &out) const;
 public:
-    virtual ~Value(){};
+    virtual ~Value();
     virtual bool operator==(const Value &rhs) const=0;
     virtual bool operator<(const Value &rhs) const=0;
     virtual void memoryCopy(void *dest) const=0;
 	virtual Size size() const=0;
-	friend ostream &operator<<(ostream &out, const Value &val){
-		val.print(out);
-		return out;
-	}
+	virtual void print(ostream &out) const=0;
 };
+
+ostream &operator<<(ostream &out, const Value &val);
 
 template<class T>
 class SingleValue: public Value {
 private:
 	T data;
 public:
-	SingleValue(T x):data(x){}
-	virtual ~SingleValue(){};
-	virtual bool operator==(const Value &rhs) const {
-		auto r = dynamic_cast<const SingleValue<T>&>(rhs);
-		return data == r.data;
-	}
-	virtual bool operator<(const Value &rhs) const {
-		auto r = dynamic_cast<const SingleValue<T>&>(rhs);
-		return data < r.data;
-	}
-	virtual Size size() const {
-		return sizeof(T);
-	}
-	virtual void memoryCopy(void *dest) const {
-		memcpy(dest, &data, size());
-	}
-	virtual void print(ostream &out) const {
-		out << data;
-	}
+	SingleValue(T x);
+	virtual ~SingleValue();
+	virtual bool operator==(const Value &rhs) const;
+	virtual bool operator<(const Value &rhs) const;
+	virtual Size size() const;
+    virtual void memoryCopy(void *dest) const;
+	virtual void print(ostream &out) const;
 };
 typedef SingleValue<int> Int;
 typedef SingleValue<float> Float;
 typedef SingleValue<string> String;
-
-template<>
-Size String::size() const {
-    return data.size();
-}
-
-template<>
-void String::memoryCopy(void *dest) const {
-    strcpy((char*)dest, data.data());
-}
 
 class valueDetail {
 public:

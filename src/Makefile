@@ -1,13 +1,13 @@
 COMMON_HEADERS := common.h
 COMMON_OBJS :=
 CC := g++
-COP := -std=c++11 -Ofast
+COP := -std=c++11 -O1
 
-TARGET := buffer/buffer.o
+TARGET := common.o buffer/buffer.o
 
 all: $(TARGET)
 
-%.o: %.cpp $(COMMON_HEADERS)
+%.o: %.cc $(COMMON_HEADERS)
 	$(CC) $(COP) $< -c -o $@
 
 %.exe: %.o
@@ -23,5 +23,3 @@ clean_exe:
 	rm -f *.out *.exe
 
 clean: clean_tmp clean_o clean_exe
-
-clean_not_src: clean_tmp clean_o clean_exe

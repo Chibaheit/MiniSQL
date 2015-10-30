@@ -1,5 +1,5 @@
 COMMON_HEADERS := ../src/common.h
-COMMON_OBJS :=
+COMMON_OBJS := ../src/common.o
 CC := g++
 COP := -std=c++11 -Ofast
 
