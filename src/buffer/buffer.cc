@@ -48,12 +48,17 @@ unsigned Buffer::getNewBlock(FILE *file, unsigned offset,
 Block *Buffer::access(const string &filePath,
                       unsigned blockIndex, bool pinned) {
     debug("Accessing \"%s\" %d\n", filePath.c_str(), blockIndex);
-    return inst->m_access(filePath, blockIndex * inst->m_block_size, pinned);
+    FILE *fp = inst->getFileHandle(filePath);
+    unsigned offset = blockIndex * inst->m_block_size;
+    return inst->m_access(fp, offset, pinned);
 }
 
-Block *Buffer::m_access(const string &filePath,
-                      unsigned offset, bool pinned) {
+Block *Buffer::access(FILE *file, unsigned blockIndex, bool pinned) {
+    unsigned offset = blockIndex * inst->m_block_size;
+    return inst->m_access(file, offset, pinned);
+}
 
+FILE *Buffer::getFileHandle(const string &filePath) {
     auto file = m_files.find(filePath);
     FILE *fp = NULL;
     if (file == m_files.end()) {
@@ -65,17 +70,28 @@ Block *Buffer::m_access(const string &filePath,
         m_dictionary[fp];
     } else fp = file->second;
     assert(fp);
+    return fp;
+}
 
+FILE *Buffer::getFile(const string &filePath) {
+    return inst->getFileHandle(filePath);
+}
+
+Block *Buffer::m_access(FILE *fp, unsigned offset, bool pinned) {
     auto &table = m_dictionary.find(fp)->second;
     auto entry = table.find(offset);
     if (entry == table.end()) {
-        table[offset] = getNewBlock(
-            fp,
+        auto tmp = table.insert(make_pair(
             offset,
-            m_block_size,
-            pinned
-        );
-        entry = table.find(offset);
+            getNewBlock(
+                fp,
+                offset,
+                m_block_size,
+                pinned
+            )
+        ));
+        assert(tmp.second);
+        entry = tmp.first;
     }
 
     Block *block = m_blocks[entry->second];

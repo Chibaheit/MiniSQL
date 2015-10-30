@@ -81,9 +81,9 @@ private:
     static Buffer *inst;
     unsigned getNewBlock(FILE *file, unsigned offset,
                          unsigned blockSize, bool pinned);
-    Block *m_access(const string &filePath, unsigned offset,
-                  bool pinned = false);
+    Block *m_access(FILE *file, unsigned offset, bool pinned = false);
     void printOpenedBlocks() const {
+        #ifdef DEBUG
         for (auto &u: m_dictionary) {
             debug("File %p:", u.first);
             for (auto &v: u.second) {
@@ -92,8 +92,11 @@ private:
             debug("\n");
         }
         debug("\n");
+        #endif
     }
     friend Block;
+    // get file handle from buffer
+    FILE *getFileHandle(const string &filePath);
 
 public:
     ~Buffer();
@@ -102,6 +105,11 @@ public:
     // pin the block in buffer according to pinned
     static Block *access(const string &filePath, unsigned blockIndex,
                          bool pinned = false);
+    // identify file by FILE *file instead of filePath
+    // use getFilehandle method to get this file
+    static Block *access(FILE *file, unsigned blockIndex, bool pinned = false);
+    // static wrapper function
+    static FILE *getFile(const string &filePath);
     // flush all blocks to files
     static void flush();
 };
