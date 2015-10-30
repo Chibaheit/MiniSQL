@@ -59,3 +59,12 @@ void Buffer::flush() {
     delete inst;
     Singleton::initBuffer();
 }
+
+Buffer::~Buffer() {
+    for (int i = 0; i < m_size; ++i)
+        if (m_blocks[i]) delete m_blocks[i];
+    delete [] m_blocks;
+    for (auto &file: m_dictionary) {
+        fclose(file.second.first);
+    }
+}

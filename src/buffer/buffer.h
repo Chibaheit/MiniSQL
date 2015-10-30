@@ -21,11 +21,7 @@ private:
     static Buffer *inst;
 
 public:
-    ~Buffer() {
-        for (int i = 0; i < m_size; ++i)
-            if (m_blocks[i]) delete m_blocks[i];
-        delete [] m_blocks;
-    }
+    ~Buffer();
     Block *access(const string &filePath, unsigned blockIndex, bool pinned = false);
     static void flush();
     unsigned getNewBlock(FILE *file, unsigned blockIndex,
