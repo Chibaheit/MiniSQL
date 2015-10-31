@@ -68,7 +68,7 @@ void Node::split(Value *val, unsigned ptr, Node &des) const {
 
 // insert val into the Index
 // returning end() means insertion failed
-Index::Iterator Index::insert(Value *val, unsigned ptr) {
+void Index::insert(Value *val, unsigned ptr) {
     insert(getHeader().root(), val, ptr);
 }
 
@@ -106,4 +106,20 @@ pair<Value *, unsigned> Index::insert(unsigned x, Value *val, unsigned ptr) {
     }
     u.m_block.pin(false);
     return ret;
+}
+
+Index::Iterator Index::upper_bound(unsigned x, Value *val) {
+    Node node = getNode(getBlock(x));
+    unsigned pos = node.find(val);
+    if (pos == -1) return Iterator(*this, 0, 0);
+    if (node.mask() & Node::LEAF) return Iterator(*this, x, pos);
+    return upper_bound(node.getPtr(pos), val);
+}
+
+Index::Iterator Index::lower_bound(unsigned x, Value *val) {
+    Node node = getNode(getBlock(x));
+    unsigned pos = node.lower_bound(val) - 1;
+    if (pos == -1) return Iterator(*this, 0, 0);
+    if (node.mask() & Node::LEAF) return Iterator(*this, x, pos);
+    return lower_bound(node.getPtr(pos), val);
 }

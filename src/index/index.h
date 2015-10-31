@@ -83,6 +83,18 @@ public:
         }
         return L;
     }
+    // find the index of the first entry with key equal or larger than val
+    unsigned lower_bound(Value *val) const {
+        unsigned L = 0, R = size();
+        while (L < R) {
+            unsigned M = L + (R - L) / 2;
+            Value *vmid = getKey(M);
+            if (!(vmid < val)) R = M;
+            else L = M + 1;
+            delete vmid;
+        }
+        return L;
+    }
     // find the child val is in, -1 means not found
     unsigned find(Value *val) const {
         return upper_bound(val) - 1;
@@ -138,10 +150,14 @@ public:
 };
 
 class Index {
+public:
+    class Iterator;
 private:
     Type m_type;
     FILE *m_file;
     pair<Value *, unsigned> insert(unsigned x, Value *val, unsigned ptr);
+    Iterator upper_bound(unsigned x, Value *val);
+    Iterator lower_bound(unsigned x, Value *val);
 public:
     IndexHeader getHeader() const {
         return IndexHeader(Buffer::access(m_file, 0));
@@ -201,20 +217,27 @@ public:
     };
 
     // follow stl standard
-    Iterator begin() const;
-    Iterator end() const;
+    Iterator begin() {
+        return Iterator(*this, getHeader().begin(), 0);
+    }
+    Iterator end() {
+        return Iterator(*this, 0, 0);
+    }
 
     // insert val into the Index
-    // returning end() means insertion failed
-    Iterator insert(Value *val, unsigned ptr);
+    void insert(Value *val, unsigned ptr);
 
-    // find the first position where key is not less than val
-    // returning end() means all keys are less than val
-    Iterator lower_bound(Value *val);
+    // find the last position where key is not larger than val
+    // returning end() means all keys are larger than val
+    Iterator upper_bound(Value *val) {
+        return upper_bound(getHeader().root(), val);
+    }
 
-    // find the first position where key is larger than val
+    // find the last position where key is less than val
     // returning end() means all keys are not larger than val
-    Iterator upper_bound(Value *val);
+    Iterator lower_bound(Value *val) {
+        return lower_bound(getHeader().root(), val);
+    }
 
     // erase the key equal to val
     // returns the number of nodes erased
