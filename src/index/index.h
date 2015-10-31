@@ -46,6 +46,7 @@ public:
     void setKey(int i, Value *val) const {
         assert(i>=0 && i<size());
         val->memoryCopy(m_block.data() + m_unit * i + szInt);
+        delete val;
     }
     // get the ith pointer
     unsigned getPtr(int i) const {
@@ -57,11 +58,53 @@ public:
         assert(i>=0 && i<size());
         *(unsigned *)(m_block.data() + m_unit * i) = ptr;
     }
+    // erase entries with index in range [begin, end)
+    void erase(unsigned begin, unsigned end) const {
+        assert(begin >= 0 && begin < end && end <= size());
+        for (; end < size(); ++begin, ++end) {
+            setPtr(begin, getPtr(end));
+            setKey(begin, getKey(end));
+        }
+        size() = begin;
+    }
+    // erase entry with index begin
+    void erase(unsigned begin) const {
+        erase(begin, begin + 1);
+    }
+    // find the index of the first entry with key larger than val
+    unsigned upper_bound(Value *val) const {
+        unsigned L = 0, R = size();
+        while (L < R) {
+            unsigned M = L + (R - L) / 2;
+            Value *vmid = getKey(M);
+            if (val < vmid) R = M;
+            else L = M + 1;
+            delete vmid;
+        }
+        return L;
+    }
+    // find the child val is in, -1 means not found
+    unsigned find(Value *val) const {
+        return upper_bound(val) - 1;
+    }
     // insert (val, ptr) into node
     // returns whether successful
-    bool insert(Value *val, unsigned ptr);
+    bool insert(Value *val, unsigned ptr) const;
     // split the node when inserting (val ptr) half to node des
-    void split(Value *val, unsigned ptr, Node &des);
+    void split(Value *val, unsigned ptr, Node &des) const;
+    // erase key from the node, returns whether the key is erased
+    bool erase(Value *val) const {
+        unsigned pos = find(val);
+        if (pos == -1) return 0;
+        Value *vtmp = getKey(pos);
+        bool erased = 0;
+        if (*vtmp == *val) {
+            erase(pos);
+            erased = 1;
+        }
+        delete vtmp;
+        return erased;
+    }
 };
 
 // store necessary information to describe the index file including:

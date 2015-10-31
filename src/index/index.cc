@@ -19,7 +19,7 @@ Index::Index(const string &filepath) {
     m_type = header.getKeyType();
 }
 
-bool Node::insert(Value *val, unsigned ptr) {
+bool Node::insert(Value *val, unsigned ptr) const {
     if (size() == n) return false;
     ++size();
     for (unsigned i = size()-1; ~i; --i) {
@@ -34,13 +34,11 @@ bool Node::insert(Value *val, unsigned ptr) {
             delete key;
             break;
         }
-        delete key;
     }
-    delete val;
     return true;
 }
 
-void Node::split(Value *val, unsigned ptr, Node &des) {
+void Node::split(Value *val, unsigned ptr, Node &des) const {
     assert(size() == n);
     Value *vtmp, *key = getKey(size() - 1);
     unsigned ptmp;
@@ -67,5 +65,4 @@ void Node::split(Value *val, unsigned ptr, Node &des) {
     des.next() = next();
     size() = begin;
     next() = des.m_block.index();
-    delete vtmp;
 }
