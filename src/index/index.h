@@ -9,41 +9,76 @@ const int szInt = sizeof(int);
 
 class Node {
 private:
-    Block *m_block;
+    Block &m_block;
     Type m_key_type;
-    bool isLeaf;
-    unsigned n, unitSize;
+    unsigned n, m_unit;
     void init() {
-        unsigned sz = block->size();
-        unsigned skey = m_key_type->size();
-        isLeaf = block->constData()[sz - 1];
-        unitSize = skey + szInt;
-        n = (m_block->size() - szInt - 1) / unitSize;
+        m_unit = m_key_type.size() + szInt;
+        n = (m_block.size() - szInt*3) / m_unit;
     }
 public:
-    // open an existing Node Block
+    unsigned &mask, &size;
+    static unsigned LEAF, ROOT;
+    // open a Node Block
     Node(Block *block, Type key_type):
-        m_block(block), m_key_type(key_type) {
+        m_block(*block), m_key_type(key_type),
+        size(m_block[-2]), mask(m_block[-1]) {
         init();
     }
-    // initialize a new Node Block
-    Node(Block *block, Type key_type, bool isLeaf):
-        m_block(block), m_key_type(key_type), isLeaf(isLeaf) {
-        block->data()[sz - 1] = isLeaf;
-        *(unsigned *)block->data() = 0;
-        init();
-        unitSize = m_key_type->size() + szInt;
+    // initialize an empty Node Block
+    void initialize(unsigned _mask) {
+        mask = _mask;
+        size = 0;
+        m_block.setDirty();
     }
+    // get the ith key
     Value *getKey(int i) const {
         assert(i>=0 && i<n);
         return m_key_type.create(
-            m_block->constData() + unitSize * i + szInt;
+            m_block.constData() + m_unit * i + szInt
         );
     }
+    // set the ith key
+    void setKey(int i, Value *val) const {
+        assert(i>=0 && i<n);
+        val->memoryCopy(m_block.data() + m_unit * i + szInt);
+    }
+    // get the ith pointer
     unsigned getPtr(int i) const {
         assert(i>=0 && i<=n);
-        const char *mem = m_block->constData() + unitSize * i;
-        return *(unsigned *)mem;
+        return *(unsigned *)(m_block.constData() + m_unit * i);
+    }
+    // set the ith pointer
+    void setPtr(int i, unsigned ptr) const {
+        assert(i>=0 && i<=n);
+        *(unsigned *)(m_block.data() + m_unit * i) = ptr;
+    }
+};
+
+// store necessary information to describe the index file including:
+// key type, root node position, empty block chain's head, number of existing blocks
+class IndexHeader {
+private:
+    Block &m_block;
+public:
+    IndexHeader(Block *block): m_block(*block) {}
+    unsigned &type() {return m_block[0];}
+    unsigned &key_size() {return m_block[1];}
+    unsigned &root() {return m_block[2];}
+    unsigned &emptyHead() {return m_block[3];}
+    unsigned &nBlocks() {return m_block[4];}
+    // initialize empty file
+    void initialize(Type keyType) {
+        root() = 0;
+        emptyHead() = 0;
+        nBlocks() = 1;
+        type() = keyType.getType();
+        key_size() = keyType.size();
+        m_block.setDirty();
+    }
+    // get key type from file
+    Type getKeyType() {
+        return Type((attributeType)type(), key_size());
     }
 };
 
@@ -55,8 +90,8 @@ public:
     // open an existing index file
     Index(const string &filepath);
 
-    // create an empty index file by key: attr
-    Index(const string &filepath, const attributeDetail &attr);
+    // create an empty index file by key of type type
+    Index(const string &filepath, const Type &type);
 
     class Iterator {
         Iterator operator++();

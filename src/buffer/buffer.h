@@ -56,6 +56,17 @@ public:
         m_recent = m_dirty = true;
         return m_data;
     }
+    void setDirty() {
+        m_recent = m_dirty = true;
+    }
+    // get integer reference at pos
+    // negative pos is allowed and treated as indexing from the end
+    // Note this method set neither the m_recent nor m_dirty flag
+    // set them manually calling setDirty()
+    unsigned &operator[](int pos) {
+        unsigned offset = pos * sizeof(int);
+        return *(unsigned *)(m_data + (pos < 0 ? m_size - offset : offset));
+    }
     // automatic write back when destroyed
     ~Block() {
         writeBack();

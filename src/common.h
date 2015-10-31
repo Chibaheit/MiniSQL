@@ -104,12 +104,22 @@ typedef SingleValue<string> String;
 
 class Type {
 private:
-    attributeType type;
-    unsigned size;
+    attributeType m_type;
+    unsigned m_size;
 public:
-    Type(attributeType type, unsigned size): type(type), size(size) {}
+    Type(attributeType type, unsigned size): m_type(type), m_size(size) {}
+    Type(): m_size(-1) {}
+    bool isValid() const {
+        return ~m_size;
+    }
+    attributeType getType() const {
+        assert(isValid());
+        return m_type;
+    }
+    // create an instance of type from memory
     Value *create(const char *mem) const {
-        switch (type) {
+        assert(isValid());
+        switch (m_type) {
             case INTTYPE: return new Int(mem);
             case FLOATTYPE: return new Float(mem);
             case CHARTYPE: return new String(mem);
@@ -117,8 +127,8 @@ public:
         }
     }
     // the number of bytes
-    unsigned getSize() const {
-        return size;
+    unsigned size() const {
+        return m_size;
     }
 };
 
