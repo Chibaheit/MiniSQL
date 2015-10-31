@@ -58,3 +58,5 @@ void String::memoryCopy(void *dest) const {
 String __string_template("Hello, World!");
 Float __float_template(1.0);
 Int __int_template(1);
+
+Type Type::intType(INTTYPE, sizeof(int)), Type::floatType(FLOATTYPE, sizeof(float));

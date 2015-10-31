@@ -42,7 +42,6 @@ void Node::split(Value *val, unsigned ptr, Node &des) const {
     assert(size() == n);
     Value *vtmp, *key = getKey(size() - 1);
     unsigned ptmp;
-    des.mask() = mask() &= ~ROOT;
     if (*val < *key) {
         vtmp = key;
         ptmp = getPtr(size() - 1);
@@ -65,4 +64,46 @@ void Node::split(Value *val, unsigned ptr, Node &des) const {
     des.next() = next();
     size() = begin;
     next() = des.m_block.index();
+}
+
+// insert val into the Index
+// returning end() means insertion failed
+Index::Iterator Index::insert(Value *val, unsigned ptr) {
+    insert(getHeader().root(), val, ptr);
+}
+
+pair<Value *, unsigned> Index::insert(unsigned x, Value *val, unsigned ptr) {
+    Node node = getNode(getBlock(x));
+    pair<Value *, unsigned> ret = make_pair((Value *)NULL, 0);
+    if (~node.mask() & Node::LEAF) {
+        unsigned pos = node.find(val);
+        assert(~pos);
+        auto tmp = insert(node.getPtr(pos), val, ptr);
+        if (tmp.second) {
+            val = tmp.first;
+            ptr = tmp.second;
+        } else return ret;
+    }
+    Node u = getNode(getBlock(x, true));
+    if (!node.insert(val, ptr)) {
+        unsigned y = getNewBlock();
+        Node v = getNode(getBlock(y, true));
+        bool root = false;
+        if (u.mask() & Node::ROOT) {
+            u.mask() ^= Node::ROOT;
+            root = true;
+        }
+        v.initialize(u.mask());
+        u.split(val, ptr, v);
+        if (root) {
+            unsigned z = getNewBlock();
+            Node w = getNode(getBlock(z));
+            w.initialize(Node::ROOT);
+            w.insert(u.getKey(0), x);
+            w.insert(v.getKey(0), y);
+        } else ret = make_pair(v.getKey(0), y);
+        v.m_block.pin(false);
+    }
+    u.m_block.pin(false);
+    return ret;
 }

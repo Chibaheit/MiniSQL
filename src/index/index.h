@@ -9,7 +9,6 @@ const int szInt = sizeof(int);
 
 class Node {
 private:
-    Block &m_block;
     Type m_key_type;
     unsigned n, m_unit;
     void init() {
@@ -18,6 +17,7 @@ private:
         assert(n >= 3);
     }
 public:
+    Block &m_block;
     static unsigned LEAF, ROOT;
     // open a Node Block
     Node(Block *block, Type key_type):
@@ -28,7 +28,7 @@ public:
     void initialize(unsigned _mask) {
         mask() = _mask;
         size() = 0;
-        setPtr(n, 0);
+        next() = 0;
         m_block.setDirty();
     }
     unsigned num() const {return n;}
@@ -125,7 +125,7 @@ public:
     void initialize(Type keyType) {
         root() = 1;
         emptyHead() = 0;
-        nBlocks() = 2;
+        nBlocks() = 1;
         type() = keyType.getType();
         key_size() = keyType.size();
         begin() = 1;
@@ -141,7 +141,30 @@ class Index {
 private:
     Type m_type;
     FILE *m_file;
+    pair<Value *, unsigned> insert(unsigned x, Value *val, unsigned ptr);
 public:
+    IndexHeader getHeader() const {
+        return IndexHeader(Buffer::access(m_file, 0));
+    }
+
+    Block &getBlock(unsigned blockIndex, bool pinned = false) const {
+        return *Buffer::access(m_file, blockIndex, pinned);
+    }
+
+    Node getNode(Block &block) const {
+        return Node(&block, m_type);
+    }
+
+    unsigned getNewBlock() const {
+        unsigned head = getHeader().emptyHead();
+        if (head) {
+            unsigned nxt = Node(&getBlock(head), Type::intType).next();
+            getHeader().emptyHead() = nxt;
+            return head;
+        }
+        return ++getHeader().nBlocks();
+    }
+
     // open an existing index file
     Index(const string &filepath);
 
@@ -183,7 +206,7 @@ public:
 
     // insert val into the Index
     // returning end() means insertion failed
-    Iterator insert(Value *val);
+    Iterator insert(Value *val, unsigned ptr);
 
     // find the first position where key is not less than val
     // returning end() means all keys are less than val

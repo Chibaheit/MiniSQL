@@ -107,6 +107,7 @@ private:
     attributeType m_type;
     unsigned m_size;
 public:
+    static Type intType, floatType;
     Type(attributeType type, unsigned size): m_type(type), m_size(size) {}
     Type(): m_size(-1) {}
     bool isValid() const {
