@@ -31,9 +31,6 @@ private:
         m_data = new char[size];
         open(file, offset, size);
     }
-    void pin(bool pinned) {
-        m_pinned = pinned;
-    }
     void setRecent(bool recent) {
         m_recent = recent;
     }
@@ -42,6 +39,10 @@ private:
     }
     friend Buffer;
 public:
+    // returns block index
+    unsigned index() const {
+        return m_offset / m_size;
+    }
     // returns block size, default is 4096
     Size size() const {
         return m_size;
@@ -71,6 +72,9 @@ public:
     ~Block() {
         writeBack();
         delete [] m_data;
+    }
+    void pin(bool pinned) {
+        m_pinned = pinned;
     }
     // check whether the block is pinned in the buffer
     bool isPinned() const {
