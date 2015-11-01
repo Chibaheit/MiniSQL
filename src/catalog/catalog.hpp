@@ -10,7 +10,7 @@
 #define catalog_hpp
 
 #include <unordered_map>
-#include "../common.h"
+#include "common.h"
 
 #ifndef info_type
 #define info_type
