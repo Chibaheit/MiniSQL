@@ -14,7 +14,7 @@ all: $(TARGET)
 	$(CC) $(COP) $< $(COMMON_OBJS) -o $@
 
 clean_o:
-	rm -f *.o
+	rm -f *.o */*.o
 
 clean_tmp:
 	rm -f *~ *.swp *.output

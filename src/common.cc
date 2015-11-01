@@ -35,12 +35,16 @@ void SingleValue<T>::print(ostream &out) const {
 	out << data;
 }
 
-/*
-template <>
-String::SingleValue(const char *mem) {
+template <class T>
+SingleValue<T>::SingleValue(T x): data(x) {}
+
+template <class T>
+SingleValue<T>::SingleValue(const char *mem): data(*(const T*)mem) {}
+
+template<>
+String::SingleValue(const char *mem){
 	data = mem;
 }
-*/
 
 template <class T>
 SingleValue<T>::~SingleValue(){}
@@ -56,6 +60,7 @@ void String::memoryCopy(void *dest) const {
 }
 
 String __string_template("Hello, World!");
+String __string_template2(string("Hello, World!"));
 Float __float_template(1.0);
 Int __int_template(1);
 

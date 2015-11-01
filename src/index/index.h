@@ -36,17 +36,16 @@ public:
     unsigned &size() const {return m_block[-2];}
     unsigned &next() const {return m_block[-3];}
     // get the ith key
-    Value *getKey(int i) const {
+    PValue getKey(int i) const {
         assert(i>=0 && i<size());
         return m_key_type.create(
             m_block.constData() + m_unit * i + szInt
         );
     }
     // set the ith key
-    void setKey(int i, Value *val) const {
+    void setKey(int i, PValue val) const {
         assert(i>=0 && i<size());
         val->memoryCopy(m_block.data() + m_unit * i + szInt);
-        delete val;
     }
     // get the ith pointer
     unsigned getPtr(int i) const {
@@ -72,49 +71,46 @@ public:
         erase(begin, begin + 1);
     }
     // find the index of the first entry with key larger than val
-    unsigned upper_bound(Value *val) const {
+    unsigned upper_bound(PValue val) const {
         unsigned L = 0, R = size();
         while (L < R) {
             unsigned M = L + (R - L) / 2;
-            Value *vmid = getKey(M);
+            PValue vmid = getKey(M);
             if (*val < *vmid) R = M;
             else L = M + 1;
-            delete vmid;
         }
         return L;
     }
     // find the index of the first entry with key equal or larger than val
-    unsigned lower_bound(Value *val) const {
+    unsigned lower_bound(PValue val) const {
         unsigned L = 0, R = size();
         while (L < R) {
             unsigned M = L + (R - L) / 2;
-            Value *vmid = getKey(M);
+            PValue vmid = getKey(M);
             if (!(*vmid < *val)) R = M;
             else L = M + 1;
-            delete vmid;
         }
         return L;
     }
     // find the child val is in, -1 means not found
-    unsigned find(Value *val) const {
+    unsigned find(PValue val) const {
         return upper_bound(val) - 1;
     }
     // insert (val, ptr) into node
     // returns whether successful
-    bool insert(Value *val, unsigned ptr) const;
+    bool insert(PValue val, unsigned ptr) const;
     // split the node when inserting (val ptr) half to node des
-    void split(Value *val, unsigned ptr, Node &des) const;
+    void split(PValue val, unsigned ptr, Node &des) const;
     // erase key from the node, returns whether the key is erased
-    bool erase(Value *val) const {
+    bool erase(PValue val) const {
         unsigned pos = find(val);
         if (pos == -1) return 0;
-        Value *vtmp = getKey(pos);
+        PValue vtmp = getKey(pos);
         bool erased = 0;
         if (*vtmp == *val) {
             erase(pos);
             erased = 1;
         }
-        delete vtmp;
         return erased;
     }
 };
@@ -155,10 +151,10 @@ public:
 private:
     Type m_type;
     FILE *m_file;
-    pair<Value *, unsigned> insert(unsigned x, Value *val, unsigned ptr);
-    bool erase(unsigned x, Value *val);
-    Iterator upper_bound(unsigned x, Value *val);
-    Iterator lower_bound(unsigned x, Value *val);
+    pair<PValue , unsigned> insert(unsigned x, PValue val, unsigned ptr);
+    bool erase(unsigned x, PValue val);
+    Iterator upper_bound(unsigned x, PValue val);
+    Iterator lower_bound(unsigned x, PValue val);
 public:
     IndexHeader getHeader() const {
         return IndexHeader(Buffer::access(m_file, 0));
@@ -209,7 +205,7 @@ public:
         bool operator==(const Iterator &rhs) const {
             return i == rhs.i && j == rhs.j;
         }
-        Value *key() const {
+        PValue key() const {
             return node().getKey(j);
         }
         unsigned value() const {
@@ -226,23 +222,23 @@ public:
     }
 
     // insert val into the Index
-    void insert(Value *val, unsigned ptr);
+    void insert(PValue val, unsigned ptr);
 
     // find the last position where key is not larger than val
     // returning end() means all keys are larger than val
-    Iterator upper_bound(Value *val) {
+    Iterator upper_bound(PValue val) {
         return upper_bound(getHeader().root(), val);
     }
 
     // find the last position where key is less than val
     // returning end() means all keys are not larger than val
-    Iterator lower_bound(Value *val) {
+    Iterator lower_bound(PValue val) {
         return lower_bound(getHeader().root(), val);
     }
 
     // erase the key equal to val
     // returns the number of nodes erased
-    unsigned erase(Value *val);
+    unsigned erase(PValue val);
 
     // erase the node denoted by the Iterator
     // returns the number of nodes erased

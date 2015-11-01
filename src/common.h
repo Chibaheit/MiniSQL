@@ -90,8 +90,8 @@ class SingleValue: public Value {
 private:
 	T data;
 public:
-	SingleValue(T x): data(x) {}
-    SingleValue(const char *mem): data(*(const T*)mem) {}
+	SingleValue(T x);
+    SingleValue(const char *mem);
 	virtual ~SingleValue();
 	virtual bool operator==(const Value &rhs) const;
 	virtual bool operator<(const Value &rhs) const;
@@ -103,6 +103,15 @@ typedef SingleValue<int> Int;
 typedef SingleValue<float> Float;
 typedef SingleValue<string> String;
 typedef shared_ptr<Value> PValue;
+
+template<>
+Size String::size() const;
+
+template<>
+void String::memoryCopy(void *dest) const;
+
+template<>
+String::SingleValue(const char *mem);
 
 class Type {
 private:
@@ -120,12 +129,12 @@ public:
         return m_type;
     }
     // create an instance of type from memory
-    Value *create(const char *mem) const {
+    PValue create(const char *mem) const {
         assert(isValid());
         switch (m_type) {
-            case INTTYPE: return new Int(mem);
-            case FLOATTYPE: return new Float(mem);
-            case CHARTYPE: return new String(mem);
+            case INTTYPE: return PValue(new Int(mem));
+            case FLOATTYPE: return PValue(new Float(mem));
+            case CHARTYPE: return PValue(new String(mem));
             default: assert(0 && "unknown type");
         }
     }

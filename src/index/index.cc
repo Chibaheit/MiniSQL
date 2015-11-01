@@ -19,11 +19,11 @@ Index::Index(const string &filepath) {
     m_type = header.getKeyType();
 }
 
-bool Node::insert(Value *val, unsigned ptr) const {
+bool Node::insert(PValue val, unsigned ptr) const {
     if (size() == n) return false;
     ++size();
     for (unsigned i = size()-1; ~i; --i) {
-        Value *key = getKey(i-1);
+        PValue key = getKey(i-1);
         assert(!(*val == *key) && "ERROR: inserting duplicate key!");
         if (i && *val < *key) {
             setPtr(i, getPtr(i-1));
@@ -31,27 +31,24 @@ bool Node::insert(Value *val, unsigned ptr) const {
         } else {
             setPtr(i, ptr);
             setKey(i, val);
-            delete key;
             break;
         }
     }
     return true;
 }
 
-void Node::split(Value *val, unsigned ptr, Node &des) const {
+void Node::split(PValue val, unsigned ptr, Node &des) const {
     assert(size() == n);
-    Value *vtmp, *key = getKey(size() - 1);
+    PValue vtmp, key = getKey(size() - 1);
     unsigned ptmp;
     if (*val < *key) {
         vtmp = key;
         ptmp = getPtr(size() - 1);
         --size();
         insert(val, ptr);
-        delete val;
     } else {
         vtmp = val;
         ptmp = ptr;
-        delete key;
     }
     unsigned begin = (size() + 1) / 2;
     des.size() = n + 1 - begin;
@@ -68,13 +65,13 @@ void Node::split(Value *val, unsigned ptr, Node &des) const {
 
 // insert val into the Index
 // returning end() means insertion failed
-void Index::insert(Value *val, unsigned ptr) {
+void Index::insert(PValue val, unsigned ptr) {
     insert(getHeader().root(), val, ptr);
 }
 
-pair<Value *, unsigned> Index::insert(unsigned x, Value *val, unsigned ptr) {
+pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
     Node node = getNode(getBlock(x));
-    pair<Value *, unsigned> ret = make_pair((Value *)NULL, 0);
+    pair<PValue , unsigned> ret = make_pair(PValue(NULL), 0);
     if (~node.mask() & Node::LEAF) {
         unsigned pos = node.find(val);
         assert(~pos);
@@ -108,7 +105,7 @@ pair<Value *, unsigned> Index::insert(unsigned x, Value *val, unsigned ptr) {
     return ret;
 }
 
-Index::Iterator Index::upper_bound(unsigned x, Value *val) {
+Index::Iterator Index::upper_bound(unsigned x, PValue val) {
     Node node = getNode(getBlock(x));
     unsigned pos = node.find(val);
     if (pos == -1) return Iterator(*this, 0, 0);
@@ -116,7 +113,7 @@ Index::Iterator Index::upper_bound(unsigned x, Value *val) {
     return upper_bound(node.getPtr(pos), val);
 }
 
-Index::Iterator Index::lower_bound(unsigned x, Value *val) {
+Index::Iterator Index::lower_bound(unsigned x, PValue val) {
     Node node = getNode(getBlock(x));
     unsigned pos = node.lower_bound(val) - 1;
     if (pos == -1) return Iterator(*this, 0, 0);
@@ -124,18 +121,17 @@ Index::Iterator Index::lower_bound(unsigned x, Value *val) {
     return lower_bound(node.getPtr(pos), val);
 }
 
-bool Index::erase(unsigned x, Value *val) {
+bool Index::erase(unsigned x, PValue val) {
     Node node = getNode(getBlock(x));
     unsigned pos = node.find(val);
     bool ret = false;
     if (pos == -1) return ret;
     if (node.mask() & Node::LEAF) {
-        Value *key = node.getKey(pos);
+        PValue key = node.getKey(pos);
         if (*key == *val) {
             node.erase(pos);
             ret = true;
         }
-        delete key;
         return ret;
     } else {
         erase(node.getPtr(pos), val);

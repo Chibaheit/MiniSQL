@@ -2,10 +2,7 @@
 #include <cassert>
 const string a="Hello", b="World";
 int main(){
-    Value *x, *y, *z;
-    x = new String(a);
-    y = new String(b);
-    z = new String(a);
+    PValue x(new String(a)), y(new String(b)), z(new String("Hello"));
 
     assert(*x == *z);
     assert(*z == *x);
@@ -20,8 +17,5 @@ int main(){
 
     assert(x->size()==a.size());
 
-    delete x;
-    delete y;
-    delete z;
     cout<<"String: OK!\n"<<endl;
 }
