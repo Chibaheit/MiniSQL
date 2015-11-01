@@ -77,7 +77,7 @@ public:
         while (L < R) {
             unsigned M = L + (R - L) / 2;
             Value *vmid = getKey(M);
-            if (val < vmid) R = M;
+            if (*val < *vmid) R = M;
             else L = M + 1;
             delete vmid;
         }
@@ -89,7 +89,7 @@ public:
         while (L < R) {
             unsigned M = L + (R - L) / 2;
             Value *vmid = getKey(M);
-            if (!(vmid < val)) R = M;
+            if (!(*vmid < *val)) R = M;
             else L = M + 1;
             delete vmid;
         }
@@ -156,6 +156,7 @@ private:
     Type m_type;
     FILE *m_file;
     pair<Value *, unsigned> insert(unsigned x, Value *val, unsigned ptr);
+    bool erase(unsigned x, Value *val);
     Iterator upper_bound(unsigned x, Value *val);
     Iterator lower_bound(unsigned x, Value *val);
 public:

@@ -123,3 +123,21 @@ Index::Iterator Index::lower_bound(unsigned x, Value *val) {
     if (node.mask() & Node::LEAF) return Iterator(*this, x, pos);
     return lower_bound(node.getPtr(pos), val);
 }
+
+bool Index::erase(unsigned x, Value *val) {
+    Node node = getNode(getBlock(x));
+    unsigned pos = node.find(val);
+    bool ret = false;
+    if (pos == -1) return ret;
+    if (node.mask() & Node::LEAF) {
+        Value *key = node.getKey(pos);
+        if (*key == *val) {
+            node.erase(pos);
+            ret = true;
+        }
+        delete key;
+        return ret;
+    } else {
+        erase(node.getPtr(pos), val);
+    }
+}

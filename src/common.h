@@ -6,6 +6,7 @@
 #include <string>
 #include <cstring>
 #include <cassert>
+#include <memory>
 
 using namespace std;
 
@@ -101,6 +102,7 @@ public:
 typedef SingleValue<int> Int;
 typedef SingleValue<float> Float;
 typedef SingleValue<string> String;
+typedef shared_ptr<Value> PValue;
 
 class Type {
 private:
