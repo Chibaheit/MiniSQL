@@ -140,7 +140,7 @@ Table select(string tableName, vector<queryDetail> queryList);
 
 bool insert(string tableName, vector<valueDetail> valueList);
 
-bool deleteAttribute(string tableName, vector<queryDetial> queryList);
+bool deleteAttribute(string tableName, vector<queryDetail> queryList);
 ```
 
 ## Index Manager
