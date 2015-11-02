@@ -10,7 +10,7 @@
 #define catalog_hpp
 
 #include <unordered_map>
-#include "common.h"
+#include "../common.h"
 
 #ifndef info_type
 #define info_type
@@ -74,9 +74,13 @@ public:
     
     bool getIndexList(string tableName, string attributeName, Strings &indexList);
     
-    void createTable(string tableName, vector<attributeDetail> attributeList);
+    void createTable(string tableName, vector<AttributeDetail> &attributeList);
     
     bool createIndex(string tableName, string attributeName, string indexName);
+    
+    int getAttributeSize(string tableName, string attributeName);
+    
+    int getAttributesTotalSize(string tableName);
 };
 
 #endif /* catalog_hpp */

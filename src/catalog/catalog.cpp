@@ -7,7 +7,7 @@
 //
 
 #include "catalog.hpp"
-#include "buffer.h"
+#include "../buffer/buffer.h"
 
 bool Catalog::loadSchema(string tableName) {
     if (schema.tableName == tableName)
@@ -191,10 +191,10 @@ bool Catalog::getIndexList(string tableName, string attributeName, Strings index
     return false;
 }
 
-void Catalog::createTable(string tableName, vector<attributeDetail> attributeList) {
+void Catalog::createTable(string tableName, vector<AttributeDetail> &attributeList) {
     clearSchema();
     schema.tableName = tableName;
-    for (vector<attributeDetail>::iterator itr = attributeList.begin(); itr != attributeList.end(); itr++) {
+    for (vector<AttributeDetail>::iterator itr = attributeList.begin(); itr != attributeList.end(); itr++) {
         AttrDetail attrDetail;
         attrDetail.attrName = itr->name;
         attrDetail.attrType = itr->type;
@@ -216,4 +216,20 @@ bool Catalog::createIndex(string tableName, string attributeName, string indexNa
             itr->indexList.push_back(indexName);
     storeSchema();
     return true;
+}
+
+int Catalog::getAttributeSize(string tableName, string attributeName) {
+    loadSchema(tableName);
+    for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++)
+        if (itr->attrName == attributeName)
+            return itr->length;
+    return 4;
+}
+
+int Catalog::getAttributesTotalSize(string tableName) {
+    int sum = 0;
+    loadSchema(tableName);
+    for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++)
+        sum += itr->length;
+    return sum;
 }
