@@ -63,7 +63,7 @@ FILE *Buffer::getFileHandle(const string &filePath) {
     FILE *fp = NULL;
     if (file == m_files.end()) {
         if ((fp = fopen(filePath.c_str(), "rb+")) == NULL) {
-            assert(fp = fopen(filePath.c_str(), "wb+"));
+            fp = fopen(filePath.c_str(), "wb+");
         }
         debug("File %s: %p\n", filePath.c_str(), fp);
         m_files[filePath] = fp;

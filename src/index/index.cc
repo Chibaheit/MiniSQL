@@ -24,14 +24,11 @@ bool Node::insert(PValue val, unsigned ptr) const {
     if (size() == n) return false;
     ++size();
     for (unsigned i = size()-1; ~i; --i) {
-        PValue key = getKey(i-1);
-        assert(!(*val == *key) && "ERROR: inserting duplicate key!");
-        if (i && *val < *key) {
-            setPtr(i, getPtr(i-1));
-            setKey(i, getKey(i-1));
+        assert(!i || !(*val == *getKey(i-1)) && "ERROR: inserting duplicate key!");
+        if (i && *val < *getKey(i-1)) {
+            setPair(i, getPair(i-1));
         } else {
-            setPtr(i, ptr);
-            setKey(i, val);
+            setPair(i, make_pair(val, ptr));
             break;
         }
     }
@@ -67,10 +64,14 @@ void Node::split(PValue val, unsigned ptr, Node &des) const {
 // insert val into the Index
 // returning end() means insertion failed
 void Index::insert(PValue val, unsigned ptr) {
+    debug("insert\n");
+    fflush(stderr);
     insert(getHeader().root(), val, ptr);
 }
 
 pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
+    debug("insert(%u, %u)\n", x, ptr);
+    fflush(stderr);
     Node node = getNode(x);
     pair<PValue , unsigned> ret = make_pair(PValue(NULL), 0);
     if (~node.mask() & Node::LEAF) {
