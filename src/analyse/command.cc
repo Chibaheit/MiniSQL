@@ -15,7 +15,7 @@ void Command::analyse(int argc, const char* argv[]) {
         } else if (arg.substr(argLength - 4, argLength) == ".sql") {
             args.insert(make_pair("file", arg));
         } else {
-            Exception e = Exception("Error: Invaild argument.");
+            Exception e = Exception("Error: Invaild file type.");
             e.throwError();
         }
     }
