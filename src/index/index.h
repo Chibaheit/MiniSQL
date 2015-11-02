@@ -57,6 +57,15 @@ public:
         assert(i>=0 && i<size());
         *(unsigned *)(m_block.data() + m_unit * i) = ptr;
     }
+    // get the ith pair
+    pair<PValue, unsigned> getPair(int i) const {
+        return make_pair(getKey(i), getPtr(i));
+    }
+    // set the ith pair
+    void setPair(int i, pair<PValue, unsigned> pr) const {
+        setKey(i, pr.first);
+        setPtr(i, pr.second);
+    }
     // shift elements in [begin, size()) to [begin + shamt, size() + shamt)
     void shiftRight(unsigned begin, unsigned shamt) const {
         assert(begin >= 0 && begin + shamt < size());
@@ -108,6 +117,10 @@ public:
     // insert (val, ptr) into node
     // returns whether successful
     bool insert(PValue val, unsigned ptr) const;
+    bool insert(pair<PValue, unsigned> pr) const {
+        return insert(pr.first, pr.second);
+    }
+
     // split the node when inserting (val ptr) half to node des
     void split(PValue val, unsigned ptr, Node &des) const;
     // erase key from the node, returns whether the key is erased
@@ -177,17 +190,24 @@ public:
 
     // erase block
     void eraseBlock(unsigned blockIndex) {
-        Node node = getNode(getBlock(blockIndex));
+        Node node = getNode(blockIndex);
         IndexHeader header = getHeader();
         node.next() = header.emptyHead();
         node.mask() = Node::EMPTY;
         header.emptyHead() = blockIndex;
     }
 
+    // a helper method to get a node from given block
     Node getNode(Block &block) const {
         return Node(&block, m_type);
     }
 
+    // a helper method to get a node from given block index
+    Node getNode(unsigned blockIndex, bool pinned = false) const {
+        return getNode(getBlock(blockIndex, pinned));
+    }
+
+    // get an empty new block's index
     unsigned getNewBlock() const {
         unsigned head = getHeader().emptyHead();
         if (head) {

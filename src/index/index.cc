@@ -70,7 +70,7 @@ void Index::insert(PValue val, unsigned ptr) {
 }
 
 pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
-    Node node = getNode(getBlock(x));
+    Node node = getNode(x);
     pair<PValue , unsigned> ret = make_pair(PValue(NULL), 0);
     if (~node.mask() & Node::LEAF) {
         unsigned pos = node.find(val);
@@ -81,10 +81,10 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
             ptr = tmp.second;
         } else return ret;
     }
-    Node u = getNode(getBlock(x, true));
+    Node u = getNode(x, true);
     if (!node.insert(val, ptr)) {
         unsigned y = getNewBlock();
-        Node v = getNode(getBlock(y, true));
+        Node v = getNode(y, true);
         bool root = false;
         if (u.mask() & Node::ROOT) {
             u.mask() ^= Node::ROOT;
@@ -94,7 +94,7 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
         u.split(val, ptr, v);
         if (root) {
             unsigned z = getNewBlock();
-            Node w = getNode(getBlock(z));
+            Node w = getNode(z);
             w.initialize(Node::ROOT);
             w.insert(u.getKey(0), x);
             w.insert(v.getKey(0), y);
@@ -106,7 +106,7 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
 }
 
 Index::Iterator Index::upper_bound(unsigned x, PValue val) {
-    Node node = getNode(getBlock(x));
+    Node node = getNode(x);
     unsigned pos = node.find(val);
     if (pos == -1) return Iterator(*this, 0, 0);
     if (node.mask() & Node::LEAF) return Iterator(*this, x, pos);
@@ -114,7 +114,7 @@ Index::Iterator Index::upper_bound(unsigned x, PValue val) {
 }
 
 Index::Iterator Index::lower_bound(unsigned x, PValue val) {
-    Node node = getNode(getBlock(x));
+    Node node = getNode(x);
     unsigned pos = node.lower_bound(val) - 1;
     if (pos == -1) return Iterator(*this, 0, 0);
     if (node.mask() & Node::LEAF) return Iterator(*this, x, pos);
@@ -123,7 +123,7 @@ Index::Iterator Index::lower_bound(unsigned x, PValue val) {
 
 // returns whether additional adjustments needed
 bool Index::erase(unsigned x, PValue val) {
-    Node node = getNode(getBlock(x));
+    Node node = getNode(x);
     unsigned pos = node.find(val);
     bool ret = false;
     if (pos == -1) return ret;
@@ -144,8 +144,8 @@ bool Index::erase(unsigned x, PValue val) {
 
 // returns whether additional adjust need to take place
 bool Index::adjust(unsigned x, unsigned pos) {
-    Node u = getNode(getBlock(x));
-    Node v = getNode(getBlock(u.getPtr(pos)));
+    Node u = getNode(x);
+    Node v = getNode(u.getPtr(pos));
     PValue orig_key = u.getKey(0);
     bool ret = false;
     if (v.size() < (v.num()+1)/2) {
@@ -153,8 +153,8 @@ bool Index::adjust(unsigned x, unsigned pos) {
         if (pos) pos2 = pos--;
         else pos2 = pos + 1;
         unsigned v_id = u.getPtr(pos), w_id = u.getPtr(pos2);
-        Node v = getNode(getBlock(v_id));
-        Node w = getNode(getBlock(w_id));
+        Node v = getNode(v_id);
+        Node w = getNode(w_id);
         if (merge(pos, pos2)) {
             u.erase(pos2);
             u.setKey(pos, v.getKey(0));
@@ -177,11 +177,11 @@ bool Index::adjust(unsigned x, unsigned pos) {
 }
 
 bool Index::merge(unsigned p0, unsigned p1) {
-    Node u = getNode(getBlock(p0));
-    Node v = getNode(getBlock(p1));
+    Node u = getNode(p0);
+    Node v = getNode(p1);
     if (u.size() + v.size() <= u.num()) {
         for (unsigned i = 0; i < v.size(); ++i) {
-            u.insert(v.getKey(i), v.getPtr(i));
+            u.insert(v.getPair(i));
         }
         eraseBlock(v.m_block.index());
         return true;
@@ -190,14 +190,13 @@ bool Index::merge(unsigned p0, unsigned p1) {
         if (u.size() > lnum) {
             v.shiftRight(0, u.size() - lnum);
             for (unsigned i = lnum; i < u.size(); ++i) {
-                v.setPtr(i - lnum, u.getPtr(i));
-                v.setKey(i - lnum, u.getKey(i));
+                v.setPair(i - lnum, u.getPair(i));
             }
             u.erase(lnum, u.size());
         } else { //u.size() <= lnum
             unsigned offset = u.size();
             for (unsigned i = u.size(); i < lnum; ++i) {
-                u.insert(v.getKey(i - offset), v.getPtr(i - offset));
+                u.insert(v.getPair(i - offset));
             }
             v.erase(0, lnum - offset);
         }
