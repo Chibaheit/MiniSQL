@@ -36,34 +36,14 @@ enum queryType {
     MORE
 };
 
-class Schema{
+class AttributeDetail {
 public:
-    Strings attributeName;
-    vector<attributeType> attrType;
-    vector<Size> attributeSize;
-    Schema();
-};
-
-class Attribute{
-public:
-    string value;
-    attributeType type;
-    Attribute();
-};
-
-class Table{
-public:
-    vector<Attribute> attributes;
-    Table();
-};
-
-class attributeDetail {
-public:
+    string name;
     attributeType type;
     int length;
     bool unique;
     bool primary;
-    attributeDetail(attributeType type, int length = 0, bool unique = false, bool primary = false) : type(type), length(length), unique(unique), primary(primary) {};
+    AttributeDetail(string name, attributeType type, int length = 0, bool unique = false, bool primary = false) : name(name), type(type), length(length), unique(unique), primary(primary) {};
     /* type: attribute type
      * length: if type == CHARTYPE, it must have length
      * unique: it is unique or not
@@ -98,6 +78,7 @@ public:
 	virtual Size size() const;
     virtual void memoryCopy(void *dest) const;
 	virtual void print(ostream &out) const;
+    virtual T getData() const {return data;}
 };
 typedef SingleValue<int> Int;
 typedef SingleValue<float> Float;
@@ -144,23 +125,26 @@ public:
     }
 };
 
-class valueDetail {
+class ValueDetail {
 public:
     attributeType type;
     string value;
-    valueDetail(attributeType type, string value) : type(type), value(value) {};
+    ValueDetail(attributeType type, string value) : type(type), value(value) {};
     /* type: value type
      * value: all the value saved as string
      * valueDetail: constructor
     */
 };
 
-class queryDetail {
+typedef vector<ValueDetail> Tuple;
+typedef vector<Tuple> Table;
+
+class QueryDetail {
 public:
     queryType type;
-    valueDetail val;
+    ValueDetail val;
     int targetPosition;
-    queryDetail(queryType type, valueDetail val) : type(type), val(val) {};
+    QueryDetail(queryType type, ValueDetail val, int targetPosition) : type(type), val(val), targetPosition(targetPosition) {};
     /* type: query type
      * val: the value of the restraint
      * targetPosition: the attribute position in the table.
