@@ -18,7 +18,7 @@ private:
     }
 public:
     Block &m_block;
-    static unsigned LEAF, ROOT;
+    static unsigned LEAF, ROOT, EMPTY;
     // open a Node Block
     Node(Block *block, Type key_type):
         m_block(*block), m_key_type(key_type) {
@@ -56,6 +56,15 @@ public:
     void setPtr(int i, unsigned ptr) const {
         assert(i>=0 && i<size());
         *(unsigned *)(m_block.data() + m_unit * i) = ptr;
+    }
+    // shift elements in [begin, size()) to [begin + shamt, size() + shamt)
+    void shiftRight(unsigned begin, unsigned shamt) const {
+        assert(begin >= 0 && begin + shamt < size());
+        size() += shamt;
+        for (unsigned i = size() - shamt - 1, j = size() - 1; i >= begin; --i, --j) {
+            setPtr(j, getPtr(i));
+            setKey(j, getKey(i));
+        }
     }
     // erase entries with index in range [begin, end)
     void erase(unsigned begin, unsigned end) const {
@@ -153,6 +162,8 @@ private:
     FILE *m_file;
     pair<PValue , unsigned> insert(unsigned x, PValue val, unsigned ptr);
     bool erase(unsigned x, PValue val);
+    bool adjust(unsigned x, unsigned pos);
+    bool merge(unsigned p0, unsigned p1);
     Iterator upper_bound(unsigned x, PValue val);
     Iterator lower_bound(unsigned x, PValue val);
 public:
@@ -162,6 +173,15 @@ public:
 
     Block &getBlock(unsigned blockIndex, bool pinned = false) const {
         return *Buffer::access(m_file, blockIndex, pinned);
+    }
+
+    // erase block
+    void eraseBlock(unsigned blockIndex) {
+        Node node = getNode(getBlock(blockIndex));
+        IndexHeader header = getHeader();
+        node.next() = header.emptyHead();
+        node.mask() = Node::EMPTY;
+        header.emptyHead() = blockIndex;
     }
 
     Node getNode(Block &block) const {
@@ -240,8 +260,8 @@ public:
     // returns the number of nodes erased
     unsigned erase(PValue val);
 
-    // erase the node denoted by the Iterator
-    // returns the number of nodes erased
+    // erase the key denoted by the Iterator
+    // returns the number of keys erased
     unsigned erase(const Iterator &it);
 };
 

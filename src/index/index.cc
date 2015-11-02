@@ -1,7 +1,7 @@
 #include "index.h"
 #include "../buffer/buffer.h"
 
-unsigned Node::LEAF = 1, Node::ROOT = 2;
+unsigned Node::LEAF = 1, Node::ROOT = 2, Node::EMPTY = 4;
 
 // create an empty index file by key of type type
 Index::Index(const string &filepath, const Type &type): m_type(type) {
@@ -121,6 +121,7 @@ Index::Iterator Index::lower_bound(unsigned x, PValue val) {
     return lower_bound(node.getPtr(pos), val);
 }
 
+// returns whether additional adjustments needed
 bool Index::erase(unsigned x, PValue val) {
     Node node = getNode(getBlock(x));
     unsigned pos = node.find(val);
@@ -132,8 +133,74 @@ bool Index::erase(unsigned x, PValue val) {
             node.erase(pos);
             ret = true;
         }
-        return ret;
     } else {
-        erase(node.getPtr(pos), val);
+        bool tmp = erase(node.getPtr(pos), val);
+        if (tmp) {
+            ret = adjust(x, pos);
+        }
+    }
+    return ret;
+}
+
+// returns whether additional adjust need to take place
+bool Index::adjust(unsigned x, unsigned pos) {
+    Node u = getNode(getBlock(x));
+    Node v = getNode(getBlock(u.getPtr(pos)));
+    PValue orig_key = u.getKey(0);
+    bool ret = false;
+    if (v.size() < (v.num()+1)/2) {
+        unsigned pos2;
+        if (pos) pos2 = pos--;
+        else pos2 = pos + 1;
+        unsigned v_id = u.getPtr(pos), w_id = u.getPtr(pos2);
+        Node v = getNode(getBlock(v_id));
+        Node w = getNode(getBlock(w_id));
+        if (merge(pos, pos2)) {
+            u.erase(pos2);
+            u.setKey(pos, v.getKey(0));
+            ret = true;
+            if ((u.mask() & Node::ROOT) && u.size() <= 1) {
+                eraseBlock(x);
+                v.mask() |= Node::ROOT;
+                getHeader().root() = x;
+                ret = false;
+            }
+        } else {
+            u.setKey(pos, v.getKey(0));
+            u.setKey(pos2, w.getKey(0));
+        }
+    } else {
+        u.setKey(pos, v.getKey(0));
+    }
+    if (!(*orig_key == *u.getKey(0))) ret = true;
+    return ret;
+}
+
+bool Index::merge(unsigned p0, unsigned p1) {
+    Node u = getNode(getBlock(p0));
+    Node v = getNode(getBlock(p1));
+    if (u.size() + v.size() <= u.num()) {
+        for (unsigned i = 0; i < v.size(); ++i) {
+            u.insert(v.getKey(i), v.getPtr(i));
+        }
+        eraseBlock(v.m_block.index());
+        return true;
+    } else {
+        unsigned lnum = (u.size() + v.size() + 1) / 2;
+        if (u.size() > lnum) {
+            v.shiftRight(0, u.size() - lnum);
+            for (unsigned i = lnum; i < u.size(); ++i) {
+                v.setPtr(i - lnum, u.getPtr(i));
+                v.setKey(i - lnum, u.getKey(i));
+            }
+            u.erase(lnum, u.size());
+        } else { //u.size() <= lnum
+            unsigned offset = u.size();
+            for (unsigned i = u.size(); i < lnum; ++i) {
+                u.insert(v.getKey(i - offset), v.getPtr(i - offset));
+            }
+            v.erase(0, lnum - offset);
+        }
+        return false;
     }
 }
