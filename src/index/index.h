@@ -1,6 +1,8 @@
 #ifndef INDEX_H
 #define INDEX_H
 
+// Use Index class to manage an index.
+
 #include "../common.h"
 #include "../buffer/buffer.h"
 #include <utility>
@@ -250,6 +252,9 @@ public:
         }
         unsigned value() const {
             return node().getPtr(j);
+        }
+        pair<PValue, unsigned> pair() const {
+            return node().getPair(j);
         }
     };
 

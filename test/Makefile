@@ -3,7 +3,7 @@ COMMON_OBJS := ../src/common.o
 CC := g++
 COP := -std=c++11 -g
 
-TARGET := testInt.run testFloat.run testString.run testBuffer.run
+TARGET := testInt.run testFloat.run testString.run testBuffer.run testIndex.run
 
 .PHONY: all
 all: $(TARGET)
@@ -19,12 +19,21 @@ BUFFER_OBJ := $(BUFFER_PATH)/buffer.o
 testBuffer.exe: testBuffer.o $(BUFFER_OBJ)
 	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) -o $@
 
+INDEX_PATH := ../src/index
+INDEX_OBJ := $(INDEX_PATH)/index.o
+testIndex.exe: testIndex.o $(INDEX_OBJ)
+	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(INDEX_OBJ) -o $@
+
 %.run: %.exe
 	./$<
 
 testBuffer.run: testBuffer.exe
 	./testBuffer.exe
 	rm test*.txt
+
+testIndex.run: testIndex.exe
+	./testIndex.exe
+	rm index.data
 
 clean_o:
 	rm -f *.o

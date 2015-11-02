@@ -19,6 +19,7 @@ Index::Index(const string &filepath) {
     m_type = header.getKeyType();
 }
 
+// returns whether insert operation failed
 bool Node::insert(PValue val, unsigned ptr) const {
     if (size() == n) return false;
     ++size();
