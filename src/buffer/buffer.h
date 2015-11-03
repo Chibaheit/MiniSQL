@@ -4,6 +4,13 @@
 #include "../common.h"
 #include <unordered_map>
 
+// debug finished
+#ifdef DEBUG
+    #undef DEBUG
+    #undef debug
+    #define debug(args...)
+#endif
+
 // defaultNumBlocks: the number of blocks in buffer, at least 1
 // defaultBlockSize: the size of a single block, 4096 for production use
 extern int defaultNumBlocks, defaultBlockSize;
@@ -29,6 +36,11 @@ private:
         assert(file);
         debug("Opening file with offset %u size %u\n", offset, size);
         m_data = new char[size];
+        assert(m_data);
+        #ifdef DEBUG
+        memset(m_data, 'z', size);
+        strcpy(m_data, "Hello, World!");
+        #endif
         open(file, offset, size);
     }
     void setRecent(bool recent) {
@@ -65,13 +77,18 @@ public:
     // Note this method set neither the m_recent nor m_dirty flag
     // set them manually calling setDirty()
     unsigned &operator[](int pos) {
-        unsigned offset = pos * sizeof(int);
-        return *(unsigned *)(m_data + (pos < 0 ? m_size - offset : offset));
+        char *addr = m_data + pos * sizeof(int);
+        if (pos < 0) addr += m_size;
+        assert(m_data <= addr);
+        assert(addr <= m_data + size() - sizeof(int));
+        return *(unsigned *)addr;
     }
     // automatic write back when destroyed
     ~Block() {
+        debug("Block %p %u deconstructing...\n", m_file, m_offset);
         writeBack();
         delete [] m_data;
+        debug("Block %p %u deconstructed.\n", m_file, m_offset);
     }
     void pin(bool pinned) {
         m_pinned = pinned;

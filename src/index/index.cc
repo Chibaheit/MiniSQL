@@ -5,11 +5,14 @@ unsigned Node::LEAF = 1, Node::ROOT = 2, Node::EMPTY = 4;
 
 // create an empty index file by key of type type
 Index::Index(const string &filepath, const Type &type): m_type(type) {
+    debug("Creating an index on %s with type size = %u\n", filepath.c_str(), type.size());
     m_file = Buffer::getFile(filepath);
     IndexHeader header(Buffer::access(m_file, 0, true));
     header.initialize(type);
     Node root(Buffer::access(m_file, 1), type);
     root.initialize(Node::LEAF | Node::ROOT);
+    debug("Number of children = %u\n", root.num());
+    debug("Index created.\n");
 }
 
 // open an existing index file
@@ -36,6 +39,8 @@ bool Node::insert(PValue val, unsigned ptr) const {
 }
 
 void Node::split(PValue val, unsigned ptr, Node &des) const {
+    debug("\nBefore splitting:\n");
+    print();
     assert(size() == n);
     PValue vtmp, key = getKey(size() - 1);
     unsigned ptmp;
@@ -48,7 +53,7 @@ void Node::split(PValue val, unsigned ptr, Node &des) const {
         vtmp = val;
         ptmp = ptr;
     }
-    unsigned begin = (size() + 1) / 2;
+    unsigned begin = n / 2 + 1;
     des.size() = n + 1 - begin;
     for (unsigned i = begin; i < n; ++i) {
         des.setPtr(i - begin, getPtr(i));
@@ -59,19 +64,22 @@ void Node::split(PValue val, unsigned ptr, Node &des) const {
     des.next() = next();
     size() = begin;
     next() = des.m_block.index();
+    debug("After splitting:\n");
+    print();
+    des.print();
 }
 
 // insert val into the Index
 // returning end() means insertion failed
 void Index::insert(PValue val, unsigned ptr) {
-    debug("insert\n");
     fflush(stderr);
     insert(getHeader().root(), val, ptr);
 }
 
 pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
-    debug("insert(%u, %u)\n", x, ptr);
-    fflush(stderr);
+    #ifdef DEBUG
+        cerr<<"insert("<<x<<", "<<*val<<", "<<ptr<<")"<<endl;
+    #endif
     Node node = getNode(x);
     pair<PValue , unsigned> ret = make_pair(PValue(NULL), 0);
     if (~node.mask() & Node::LEAF) {
@@ -98,6 +106,7 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
             unsigned z = getNewBlock();
             Node w = getNode(z);
             w.initialize(Node::ROOT);
+            getHeader().root() = z;
             w.insert(u.getKey(0), x);
             w.insert(v.getKey(0), y);
         } else ret = make_pair(v.getKey(0), y);

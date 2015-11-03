@@ -1,6 +1,6 @@
 #include "../src/buffer/buffer.h"
 #include <cassert>
-#define NUM 9
+#define NUM 5
 
 int defaultNumBlocks = 2, defaultBlockSize = 4096;
 

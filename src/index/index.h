@@ -7,6 +7,13 @@
 #include "../buffer/buffer.h"
 #include <utility>
 
+// debugging
+#ifndef DEBUG
+    #define DEBUG
+    #undef debug
+    #define debug(args...) fprintf(stderr, args)
+#endif
+
 const int szInt = sizeof(int);
 
 class Node {
@@ -137,6 +144,15 @@ public:
         }
         return erased;
     }
+    void print() const {
+        #ifdef DEBUG
+        debug("Node %u\n", m_block.index());
+        for (unsigned i = 0; i < size(); ++i) {
+            cerr<<*getKey(i)<<' '<<getPtr(i)<<endl;
+        }
+        debug("\n");
+        #endif
+    }
 };
 
 // store necessary information to describe the index file including:
@@ -252,9 +268,6 @@ public:
         }
         unsigned value() const {
             return node().getPtr(j);
-        }
-        pair<PValue, unsigned> pair() const {
-            return node().getPair(j);
         }
     };
 

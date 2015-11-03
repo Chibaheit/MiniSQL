@@ -108,12 +108,14 @@ void Buffer::flush() {
 }
 
 Buffer::~Buffer() {
+    debug("Buffer deconstructing...\n");
     for (int i = 0; i < m_size; ++i)
         if (m_blocks[i]) delete m_blocks[i];
     delete [] m_blocks;
     for (auto &file: m_files) {
         fclose(file.second);
     }
+    debug("Buffer deconstructed.\n");
 }
 
 void Block::open(FILE *file, unsigned offset, unsigned size) {
