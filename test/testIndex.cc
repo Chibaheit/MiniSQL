@@ -1,32 +1,32 @@
 #include "../src/index/index.h"
 #include <map>
 
-int defaultNumBlocks = 1000, defaultBlockSize = 256;
+int defaultNumBlocks = 100, defaultBlockSize = 256;
 
-int main() {
-    unsigned seed = 1446524652;//time(0);
-    debug("seed = %u\n", seed);
-    srand(seed);
-    debug("=== Creating index file...\n");
-    Index index("index.txt~", Type(INTTYPE, 4));
-    debug("=== Creating index file...OK!\n");
+int R() {
+    return (rand()<<15)^rand();
+}
+
+map<int, int> D;
+void random_insert(Index *index, int T) {
     debug("=== Inserting...\n");
-    map<int, int> D;
-    int T=100000;
     while(T--){
         int x, y;
-        x = rand(), y = rand();
+        x = R(), y = R();
         if (D.find(x) == D.end()) {
             D[x] = y;
-            index.insert(PValue(new Int(x)), y);
-            //index.print();
+            index->insert(PValue(new Int(x)), y);
+            //index->print();
         }
     }
     debug("=== Inserting...OK!\n");
-    Buffer::flush();
+}
+
+void check(Index *index) {
     debug("=== Iterating...\n");
-    auto it = index.begin();
+    auto it = index->begin();
     for (auto u: D) {
+        assert(!(it == index->end()));
         #define ASSERT
         #ifdef ASSERT
         assert(*it.key() == *PValue(new Int(u.first)));
@@ -37,8 +37,24 @@ int main() {
         #endif
         ++it;
     }
-    assert(it == index.end());
+    assert(it == index->end());
     debug("=== Iterating...OK!\n");
-    //index.print();
+}
+
+int main() {
+    unsigned seed = 1446524652;//time(0);
+    debug("seed = %u\n", seed);
+    srand(seed);
+    debug("=== Creating index file...\n");
+    Index *index = new Index("index.txt~", Type(INTTYPE, 4));
+    debug("=== Creating index file...OK!\n");
+    random_insert(index, 25000);
+    Buffer::flush();
+    delete index;
+    index = new Index("index.txt~");
+    check(index);
+    random_insert(index, 25000);
+    check(index);
+    //index->print();
     debug("##########Index is OK!###########\n\n");
 }
