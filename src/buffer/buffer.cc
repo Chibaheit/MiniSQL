@@ -47,7 +47,6 @@ unsigned Buffer::getNewBlock(FILE *file, unsigned offset,
 
 Block *Buffer::access(const string &filePath,
                       unsigned blockIndex, bool pinned) {
-    debug("Accessing \"%s\" %d\n", filePath.c_str(), blockIndex);
     FILE *fp = inst->getFileHandle(filePath);
     unsigned offset = blockIndex * inst->m_block_size;
     return inst->m_access(fp, offset, pinned);
@@ -78,6 +77,7 @@ FILE *Buffer::getFile(const string &filePath) {
 }
 
 Block *Buffer::m_access(FILE *fp, unsigned offset, bool pinned) {
+    debug("Accessing %p %u\n", fp, offset/m_block_size);
     auto &table = m_dictionary.find(fp)->second;
     auto entry = table.find(offset);
     if (entry == table.end()) {

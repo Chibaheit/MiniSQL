@@ -25,7 +25,7 @@ Index::Index(const string &filepath) {
 // returns whether insert operation failed
 bool Node::insert(PValue val, unsigned ptr) const {
     if (size() == n) return false;
-    ++size();
+    set(SIZE, size() + 1);
     for (unsigned i = size()-1; ~i; --i) {
         assert(!i || !(*val == *getKey(i-1)) && "ERROR: inserting duplicate key!");
         if (i && *val < *getKey(i-1)) {
@@ -38,35 +38,40 @@ bool Node::insert(PValue val, unsigned ptr) const {
     return true;
 }
 
+#define DEBUG_SPLIT
 void Node::split(PValue val, unsigned ptr, Node &des) const {
+#ifdef DEBUG_SPLIT
     debug("\nBefore splitting:\n");
     print();
+#endif
     assert(size() == n);
     PValue vtmp, key = getKey(size() - 1);
     unsigned ptmp;
     if (*val < *key) {
         vtmp = key;
         ptmp = getPtr(size() - 1);
-        --size();
+        set(SIZE, size() - 1);
         insert(val, ptr);
     } else {
         vtmp = val;
         ptmp = ptr;
     }
     unsigned begin = n / 2 + 1;
-    des.size() = n + 1 - begin;
+    des.set(SIZE, n + 1 - begin);
     for (unsigned i = begin; i < n; ++i) {
         des.setPtr(i - begin, getPtr(i));
         des.setKey(i - begin, getKey(i));
     }
     des.setPtr(n - begin, ptmp);
     des.setKey(n - begin, vtmp);
-    des.next() = next();
-    size() = begin;
-    next() = des.m_block.index();
+    des.set(NEXT, next());
+    des.set(SIZE, begin);
+    set(NEXT, des.m_block.index());
+#ifdef DEBUG_SPLIT
     debug("After splitting:\n");
     print();
     des.print();
+#endif
 }
 
 // insert val into the Index
@@ -84,7 +89,10 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
     pair<PValue , unsigned> ret = make_pair(PValue(NULL), 0);
     if (~node.mask() & Node::LEAF) {
         unsigned pos = node.find(val);
-        assert(~pos);
+        if (pos == -1) {
+            pos = 0;
+            node.setKey(0, val);
+        }
         auto tmp = insert(node.getPtr(pos), val, ptr);
         if (tmp.second) {
             val = tmp.first;
@@ -97,7 +105,7 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
         Node v = getNode(y, true);
         bool root = false;
         if (u.mask() & Node::ROOT) {
-            u.mask() ^= Node::ROOT;
+            u.set(Node::MASK, u.mask() & ~Node::ROOT);
             root = true;
         }
         v.initialize(u.mask());
@@ -106,13 +114,18 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
             unsigned z = getNewBlock();
             Node w = getNode(z);
             w.initialize(Node::ROOT);
-            getHeader().root() = z;
+            getHeader().set(IndexHeader::ROOT, z);
             w.insert(u.getKey(0), x);
             w.insert(v.getKey(0), y);
         } else ret = make_pair(v.getKey(0), y);
         v.m_block.pin(false);
     }
     u.m_block.pin(false);
+    #ifdef DEBUG
+    if (ret.second) {
+        cerr<<"RET: "<<*ret.first<<' '<<ret.second<<endl;
+    }
+    #endif
     return ret;
 }
 
@@ -172,8 +185,8 @@ bool Index::adjust(unsigned x, unsigned pos) {
             ret = true;
             if ((u.mask() & Node::ROOT) && u.size() <= 1) {
                 eraseBlock(x);
-                v.mask() |= Node::ROOT;
-                getHeader().root() = x;
+                v.set(Node::MASK, v.mask() | Node::ROOT);
+                getHeader().set(IndexHeader::ROOT, x);
                 ret = false;
             }
         } else {

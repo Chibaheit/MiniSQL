@@ -5,10 +5,19 @@
 #include <unordered_map>
 
 // debug finished
+/*
 #ifdef DEBUG
     #undef DEBUG
     #undef debug
     #define debug(args...)
+#endif
+*/
+
+// debugging
+#ifndef DEBUG
+    #define DEBUG
+    #undef debug
+    #define debug(args...) fprintf(stderr, args)
 #endif
 
 // defaultNumBlocks: the number of blocks in buffer, at least 1
@@ -24,6 +33,7 @@ private:
     bool m_dirty, m_pinned, m_recent;
     bool writeBack() {
         if (m_dirty) {
+            debug("Block %p %u wrote back.", m_file, index());
             assert(fseek(m_file, m_offset, SEEK_SET)==0);
             fwrite(m_data, 1, m_size, m_file);
             m_dirty = 0;
@@ -115,7 +125,7 @@ private:
                          unsigned blockSize, bool pinned);
     Block *m_access(FILE *file, unsigned offset, bool pinned = false);
     void printOpenedBlocks() const {
-        #ifdef DEBUG
+        #ifdef DEBUG_OPENED_BLOCKLIST
         for (auto &u: m_dictionary) {
             debug("File %p:", u.first);
             for (auto &v: u.second) {

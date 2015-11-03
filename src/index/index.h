@@ -35,15 +35,22 @@ public:
     }
     // initialize an empty Node Block
     void initialize(unsigned _mask) {
-        mask() = _mask;
-        size() = 0;
-        next() = 0;
-        m_block.setDirty();
+        set(MASK, _mask);
+        set(SIZE, 0);
+        set(NEXT, 0);
     }
     unsigned num() const {return n;}
-    unsigned &mask() const {return m_block[-1];}
-    unsigned &size() const {return m_block[-2];}
-    unsigned &next() const {return m_block[-3];}
+    enum offset {MASK, SIZE, NEXT};
+    void set(offset id, unsigned x) const {
+        m_block[(int)id-1] = x;
+        m_block.setDirty();
+    }
+    unsigned get(offset id) const {
+        return m_block[(int)id-1];
+    }
+    unsigned mask() const {return m_block[-1];}
+    unsigned size() const {return m_block[-2];}
+    unsigned next() const {return m_block[-3];}
     // get the ith key
     PValue getKey(int i) const {
         assert(i>=0 && i<size());
@@ -78,7 +85,7 @@ public:
     // shift elements in [begin, size()) to [begin + shamt, size() + shamt)
     void shiftRight(unsigned begin, unsigned shamt) const {
         assert(begin >= 0 && begin + shamt < size());
-        size() += shamt;
+        set(Node::SIZE, size() + shamt);
         for (unsigned i = size() - shamt - 1, j = size() - 1; i >= begin; --i, --j) {
             setPtr(j, getPtr(i));
             setKey(j, getKey(i));
@@ -91,7 +98,7 @@ public:
             setPtr(begin, getPtr(end));
             setKey(begin, getKey(end));
         }
-        size() = begin;
+        set(Node::SIZE, begin);
     }
     // erase entry with index begin
     void erase(unsigned begin) const {
@@ -146,7 +153,12 @@ public:
     }
     void print() const {
         #ifdef DEBUG
-        debug("Node %u\n", m_block.index());
+        debug(
+            "Node %u, root: %u, leaf: %u\n",
+            m_block.index(),
+            mask()&Node::ROOT,
+            mask()&Node::LEAF
+        );
         for (unsigned i = 0; i < size(); ++i) {
             cerr<<*getKey(i)<<' '<<getPtr(i)<<endl;
         }
@@ -161,23 +173,35 @@ class IndexHeader {
 private:
     Block &m_block;
 public:
-    IndexHeader(Block *block): m_block(*block) {}
+    IndexHeader(Block *block): m_block(*block) {
+        m_block.constData();
+    }
     ~IndexHeader() {m_block.pin(false);}
-    unsigned &type() {return m_block[0];}
-    unsigned &key_size() {return m_block[1];}
-    unsigned &root() {return m_block[2];}
-    unsigned &emptyHead() {return m_block[3];}
-    unsigned &nBlocks() {return m_block[4];}
-    unsigned &begin() {return m_block[5];}
+    enum offset {
+        TYPE, KEY_SIZE, ROOT, EMPTY_HEAD, N_BLOCKS, BEGIN
+    };
+    unsigned get(offset id) const {
+        return m_block[(unsigned)id];
+    }
+    void set(offset id, unsigned x) const {
+        m_block[(unsigned)id] = x;
+        m_block.setDirty();
+    }
+    unsigned type() {return get(TYPE);}
+    unsigned key_size() {return get(KEY_SIZE);}
+    unsigned root() {return get(ROOT);}
+    unsigned emptyHead() {return get(EMPTY_HEAD);}
+    unsigned nBlocks() {return get(N_BLOCKS);}
+    unsigned begin() {return get(BEGIN);}
     // initialize empty file
     void initialize(Type keyType) {
-        root() = 1;
-        emptyHead() = 0;
-        nBlocks() = 1;
-        type() = keyType.getType();
-        key_size() = keyType.size();
-        begin() = 1;
-        m_block.setDirty();
+        assert(m_block.size()>=6*sizeof(int));
+        set(ROOT, 1);
+        set(EMPTY_HEAD, 0);
+        set(N_BLOCKS, 1);
+        set(TYPE, keyType.getType());
+        set(KEY_SIZE, keyType.size());
+        set(BEGIN, 1);
     }
     // get key type from file
     Type getKeyType() {
@@ -210,9 +234,9 @@ public:
     void eraseBlock(unsigned blockIndex) {
         Node node = getNode(blockIndex);
         IndexHeader header = getHeader();
-        node.next() = header.emptyHead();
-        node.mask() = Node::EMPTY;
-        header.emptyHead() = blockIndex;
+        node.set(Node::NEXT, header.emptyHead());
+        node.set(Node::MASK, Node::EMPTY);
+        header.set(IndexHeader::EMPTY_HEAD, blockIndex);
     }
 
     // a helper method to get a node from given block
@@ -228,12 +252,18 @@ public:
     // get an empty new block's index
     unsigned getNewBlock() const {
         unsigned head = getHeader().emptyHead();
+        debug("Getting new block, empty head = %u\n", head);
+        unsigned ret = 0;
         if (head) {
-            unsigned nxt = Node(&getBlock(head), Type::intType).next();
-            getHeader().emptyHead() = nxt;
-            return head;
+            unsigned nxt = getNode(head).next();
+            getHeader().set(IndexHeader::EMPTY_HEAD, nxt);
+            ret = head;
+        } else {
+            ret = getHeader().nBlocks() + 1;
+            getHeader().set(IndexHeader::N_BLOCKS, ret);
         }
-        return ++getHeader().nBlocks();
+        debug("New block = %u\n", ret);
+        return ret;
     }
 
     // open an existing index file
@@ -301,6 +331,24 @@ public:
     // erase the key denoted by the Iterator
     // returns the number of keys erased
     unsigned erase(const Iterator &it);
+
+    // for debug use only, print the info of the whole tree
+    void print(unsigned blockIndex=0) {
+        #ifdef DEBUG
+        if (blockIndex == 0) {
+            debug("\n======= B+ Tree ======\n");
+            blockIndex = getHeader().root();
+        }
+        Node u = getNode(blockIndex);
+        u.print();
+        if (~u.mask() & Node::LEAF) {
+            for (unsigned i = 0; i < u.size(); ++i) {
+                assert(u.getPtr(i)!=blockIndex);
+                print(u.getPtr(i));
+            }
+        }
+        #endif
+    }
 };
 
 #endif
