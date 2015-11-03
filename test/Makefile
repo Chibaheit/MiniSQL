@@ -37,18 +37,18 @@ testNode.exe: testNode.o $(INDEX_OBJ) $(BUFFER_OBJ)
 	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(INDEX_OBJ) -o $@
 
 %.run: %.exe
-	./$<
+	time ./$<
 
 testBuffer.run: testBuffer.exe
-	./testBuffer.exe
+	time ./testBuffer.exe
 	rm test*.txt
 
 testIndex.run: testIndex.exe
-	./testIndex.exe
+	time ./testIndex.exe
 	rm index.txt~
 
 testNode.run: testNode.exe
-	./testNode.exe
+	time ./testNode.exe
 	rm node.txt~
 
 clean_o:

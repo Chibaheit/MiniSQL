@@ -38,14 +38,14 @@ bool Node::insert(PValue val, unsigned ptr) const {
     return true;
 }
 
-#define DEBUG_SPLIT
+//#define DEBUG_NODE_SPLIT
 void Node::split(PValue val, unsigned ptr, Node &des) const {
-#ifdef DEBUG_SPLIT
+#ifdef DEBUG_NODE_SPLIT
     debug("\nBefore splitting:\n");
     print();
 #endif
     assert(size() == n);
-    PValue vtmp, key = getKey(size() - 1);
+    PValue vtmp = NULL, key = getKey(size() - 1);
     unsigned ptmp;
     if (*val < *key) {
         vtmp = key;
@@ -65,9 +65,9 @@ void Node::split(PValue val, unsigned ptr, Node &des) const {
     des.setPtr(n - begin, ptmp);
     des.setKey(n - begin, vtmp);
     des.set(NEXT, next());
-    des.set(SIZE, begin);
+    set(SIZE, begin);
     set(NEXT, des.m_block.index());
-#ifdef DEBUG_SPLIT
+#ifdef DEBUG_NODE_SPLIT
     debug("After splitting:\n");
     print();
     des.print();
@@ -77,15 +77,15 @@ void Node::split(PValue val, unsigned ptr, Node &des) const {
 // insert val into the Index
 // returning end() means insertion failed
 void Index::insert(PValue val, unsigned ptr) {
-    fflush(stderr);
     insert(getHeader().root(), val, ptr);
 }
 
 pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
-    #ifdef DEBUG
-        cerr<<"insert("<<x<<", "<<*val<<", "<<ptr<<")"<<endl;
-    #endif
     Node node = getNode(x);
+    #ifdef DEBUG_INDEX_INSERT
+        cerr<<"insert("<<x<<", "<<*val<<", "<<ptr<<")"<<endl;
+        node.print();
+    #endif
     pair<PValue , unsigned> ret = make_pair(PValue(NULL), 0);
     if (~node.mask() & Node::LEAF) {
         unsigned pos = node.find(val);
@@ -100,7 +100,7 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
         } else return ret;
     }
     Node u = getNode(x, true);
-    if (!node.insert(val, ptr)) {
+    if (!u.insert(val, ptr)) {
         unsigned y = getNewBlock();
         Node v = getNode(y, true);
         bool root = false;
@@ -121,7 +121,7 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
         v.m_block.pin(false);
     }
     u.m_block.pin(false);
-    #ifdef DEBUG
+    #ifdef DEBUG_INDEX_INSERT
     if (ret.second) {
         cerr<<"RET: "<<*ret.first<<' '<<ret.second<<endl;
     }

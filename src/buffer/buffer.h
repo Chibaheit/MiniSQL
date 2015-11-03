@@ -4,21 +4,23 @@
 #include "../common.h"
 #include <unordered_map>
 
-// debug finished
-/*
-#ifdef DEBUG
-    #undef DEBUG
-    #undef debug
-    #define debug(args...)
+//#define DEBUG_BUFFER
+#ifdef DEBUG_BUFFER
+    // debugging
+    #ifndef DEBUG
+        #define DEBUG
+        #undef debug
+        #define debug(args...) fprintf(stderr, args)
+    #endif
+#else
+    // debug finished
+    #ifdef DEBUG
+        #undef DEBUG
+        #undef debug
+        #define debug(args...)
+    #endif
 #endif
-*/
 
-// debugging
-#ifndef DEBUG
-    #define DEBUG
-    #undef debug
-    #define debug(args...) fprintf(stderr, args)
-#endif
 
 // defaultNumBlocks: the number of blocks in buffer, at least 1
 // defaultBlockSize: the size of a single block, 4096 for production use

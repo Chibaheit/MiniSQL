@@ -42,7 +42,8 @@ public:
     unsigned num() const {return n;}
     enum offset {MASK, SIZE, NEXT};
     void set(offset id, unsigned x) const {
-        m_block[(int)id-1] = x;
+        int pos = -(int)id-1;
+        m_block[pos] = x;
         m_block.setDirty();
     }
     unsigned get(offset id) const {
@@ -252,7 +253,9 @@ public:
     // get an empty new block's index
     unsigned getNewBlock() const {
         unsigned head = getHeader().emptyHead();
+    #ifdef DEBUG_NEW_BLOCK
         debug("Getting new block, empty head = %u\n", head);
+    #endif
         unsigned ret = 0;
         if (head) {
             unsigned nxt = getNode(head).next();
@@ -262,7 +265,9 @@ public:
             ret = getHeader().nBlocks() + 1;
             getHeader().set(IndexHeader::N_BLOCKS, ret);
         }
+    #ifdef DEBUG_NEW_BLOCK
         debug("New block = %u\n", ret);
+    #endif
         return ret;
     }
 
@@ -343,8 +348,7 @@ public:
         u.print();
         if (~u.mask() & Node::LEAF) {
             for (unsigned i = 0; i < u.size(); ++i) {
-                assert(u.getPtr(i)!=blockIndex);
-                print(u.getPtr(i));
+                print(getNode(blockIndex).getPtr(i));
             }
         }
         #endif

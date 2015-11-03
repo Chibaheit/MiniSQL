@@ -1,7 +1,7 @@
 #include "../src/index/index.h"
 #include <map>
 
-int defaultNumBlocks = 4, defaultBlockSize = 40;
+int defaultNumBlocks = 1000, defaultBlockSize = 256;
 
 int main() {
     unsigned seed = 1446524652;//time(0);
@@ -12,14 +12,14 @@ int main() {
     debug("=== Creating index file...OK!\n");
     debug("=== Inserting...\n");
     map<int, int> D;
-    int T=20;
+    int T=100000;
     while(T--){
         int x, y;
-        x = rand() % 500, y = rand() % 500;
+        x = rand(), y = rand();
         if (D.find(x) == D.end()) {
             D[x] = y;
             index.insert(PValue(new Int(x)), y);
-            index.print();
+            //index.print();
         }
     }
     debug("=== Inserting...OK!\n");
@@ -31,13 +31,13 @@ int main() {
         assert(*it.key() == *PValue(new Int(u.first)));
         assert(it.value() == u.second);
         #else
-        printf("%d %d ", u.first, u.second);
+        fprintf(stderr, "%d %d ", u.first, u.second);
         cerr<<*it.key()<<' '<<it.value()<<endl;
         #endif
         ++it;
     }
     assert(it == index.end());
     debug("=== Iterating...OK!\n");
-    index.print();
+    //index.print();
     debug("##########Index is OK!###########\n\n");
 }
