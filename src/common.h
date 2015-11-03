@@ -70,8 +70,8 @@ class SingleValue: public Value {
 private:
 	T data;
 public:
-	SingleValue(T x);
-    SingleValue(const char *mem);
+	SingleValue(T x): data(x) {};
+    SingleValue(const char *mem): data(*(const T*)mem) {};
 	virtual ~SingleValue();
 	virtual bool operator==(const Value &rhs) const;
 	virtual bool operator<(const Value &rhs) const;
@@ -92,7 +92,9 @@ template<>
 void String::memoryCopy(void *dest) const;
 
 template<>
-String::SingleValue(const char *mem);
+inline String::SingleValue(const char *mem){
+	data = mem;
+}
 
 class Type {
 private:
