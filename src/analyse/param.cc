@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <cctype>
 #include <cmath>
+#include <iostream>
 
 #include "param.h"
 
@@ -67,5 +68,66 @@ namespace PARAM {
             }
         }
         return s;
+    }
+
+    string rmSpace(string s) {
+        string res = "";
+        size_t st = 0, ed = s.length();
+        while (ed > 0 && s[ed - 1] == ' ') {
+          --ed;
+        }
+        while (st < ed && s[st] == ' ') {
+          ++st;
+        }
+        bool space = true;
+        for (size_t i = st; i < ed; i++) {
+            if (space && s[i] == ' ') {
+                continue;
+            }
+            if (s[i] == ')' && res.length() > 1 && res[res.length() - 1] == ' ') {
+                res = res.substr(0, res.length() - 1);
+            }
+            res += s[i];
+            space = (s[i] == ' ');
+            if (s[i] == '(') {
+              if (res.length() > 2 && res[res.length() - 2] == ' ') {
+                  res.erase(res.begin() + res.length() - 2);
+              }
+              if (i + 1 < ed && s[i + 1] == ' ') {
+                  space = true;
+                  continue;
+              }
+            }
+        }
+        return res;
+    }
+
+    vector<string> Fragment(string& s, char separator) {
+        vector<string> res;
+        string rS = string(s.rbegin(), s.rend());
+        size_t pos, rPos;
+        size_t length = s.length();
+        try {
+            pos = s.find('('); rPos = rS.find(')');
+            s[pos] = ' '; s[length - 1 - rPos] = ' ';
+
+            if ((pos != string::npos && rPos == string::npos) || (pos == string::npos && rPos != string::npos) || (pos + rPos > length - 1)) {
+                throw invalid_argument("unmatched bracket.");
+            }
+        } catch (invalid_argument& e) {
+            cout << "Syntax Error: " << e.what() << endl;
+        }
+        s = rmSpace(s);
+        string tmp = "";
+        for (size_t i = 0; i < s.length(); i++) {
+            if (s[i] == separator) {
+                res.push_back(tmp);
+                tmp = "";
+            } else {
+                tmp += s[i];
+            }
+        }
+        res.push_back(tmp);
+        return res;
     }
 }
