@@ -2,17 +2,11 @@
 #define COMMAND_LINE_H
 
 #include <unordered_map>
+#include <string>
 
-using namespace std;
-
-class Command {
-public:
-    unordered_map<string, string> args;
+namespace COMMAND {
     // analyse the command
-    void analyse(int argc, const char* argv[]);
-
-    // print with command
-    void printArguments() const;
-};
+    std::unordered_map<std::string, std::string> analyse(int argc, const char* argv[]);
+}
 
 #endif
