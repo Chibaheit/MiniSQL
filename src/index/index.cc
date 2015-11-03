@@ -176,7 +176,7 @@ bool Index::erase(unsigned x, PValue val) {
 
 // returns whether additional adjust need to take place
 bool Index::adjust(unsigned x, unsigned pos) {
-    Node u = getNode(x);
+    Node u = getNode(x, true);
     Node v = getNode(u.getPtr(pos));
     PValue orig_key = u.getKey(0);
     bool ret = false;
@@ -185,9 +185,10 @@ bool Index::adjust(unsigned x, unsigned pos) {
         if (pos) pos2 = pos--;
         else pos2 = pos + 1;
         unsigned v_id = u.getPtr(pos), w_id = u.getPtr(pos2);
-        Node v = getNode(v_id);
-        Node w = getNode(w_id);
+        Node v = getNode(v_id, true);
+        Node w = getNode(w_id, true);
         if (merge(v_id, w_id)) {
+            v.m_block.pin(true);
             u.erase(pos2);
             u.setKey(pos, v.getKey(0));
             ret = true;
@@ -197,12 +198,17 @@ bool Index::adjust(unsigned x, unsigned pos) {
                 getHeader().set(IndexHeader::ROOT, v_id);
                 ret = false;
             }
+            v.m_block.pin(false);
         } else {
             u.setKey(pos, v.getKey(0));
             u.setKey(pos2, w.getKey(0));
+            v.m_block.pin(false);
+            w.m_block.pin(false);
         }
+        u.m_block.pin(false);
     } else {
         u.setKey(pos, v.getKey(0));
+        u.m_block.pin(false);
     }
     if (!(*orig_key == *u.getKey(0))) ret = true;
     return ret;
@@ -210,8 +216,8 @@ bool Index::adjust(unsigned x, unsigned pos) {
 
 //#define DEBUG_INDEX_MERGE
 bool Index::merge(unsigned p0, unsigned p1) {
-    Node u = getNode(p0);
-    Node v = getNode(p1);
+    Node u = getNode(p0, true);
+    Node v = getNode(p1, true);
 #ifdef DEBUG_INDEX_MERGE
     debug("Before merge:\n");
     u.print();
@@ -222,11 +228,13 @@ bool Index::merge(unsigned p0, unsigned p1) {
             u.insert(v.getPair(i));
         }
         u.set(Node::NEXT, v.next());
+        v.m_block.pin(false);
         eraseBlock(v.m_block.index());
     #ifdef DEBUG_INDEX_MERGE
         debug("After merge:\n");
         u.print();
     #endif
+        u.m_block.pin(false);
         return true;
     } else {
         unsigned lnum = (u.size() + v.size() + 1) / 2;
@@ -248,6 +256,8 @@ bool Index::merge(unsigned p0, unsigned p1) {
         u.print();
         v.print();
     #endif
+        u.m_block.pin(false);
+        v.m_block.pin(false);
         return false;
     }
 }

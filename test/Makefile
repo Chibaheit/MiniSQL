@@ -1,7 +1,7 @@
 COMMON_HEADERS := ../src/common.h
 COMMON_OBJS := ../src/common.o
 CC := g++
-COP := -std=c++11 -g
+COP := -std=c++11 -g -Ofast
 
 TARGET := testIndex2.run testIndex1.run testNode.run testInt.run testFloat.run testString.run testBuffer.run
 

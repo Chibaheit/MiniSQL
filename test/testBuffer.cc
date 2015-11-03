@@ -11,7 +11,7 @@ const char *s[] = {
 };
 
 char data[1123];
-void testFile(){
+void testFile() {
     FILE *fp = fopen("test.txt", "rb+");
     assert(fseek(fp, 100, SEEK_SET)==0);
     //fwrite(s[0], 1, sizeof("test.txt"), fp);

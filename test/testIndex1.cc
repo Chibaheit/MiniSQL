@@ -56,5 +56,6 @@ int main() {
     random_insert(index, 25000);
     check(index);
     //index->print();
+    Buffer::flush();
     debug("##########Index is OK!###########\n\n");
 }

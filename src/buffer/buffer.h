@@ -33,6 +33,7 @@ private:
     char *m_data;
     FILE *m_file;
     bool m_dirty, m_pinned, m_recent;
+    unsigned m_finger_print;
     bool writeBack() {
         if (m_dirty) {
             debug("Block %p %u wrote back.", m_file, index());
@@ -44,7 +45,8 @@ private:
         return 0;
     }
     void open(FILE *file, unsigned offset, unsigned size);
-    Block(FILE *file, Size offset, Size size): m_dirty(0), m_file(0) {
+    Block(FILE *file, Size offset, Size size):
+        m_dirty(0), m_file(0), m_finger_print(0) {
         assert(file);
         debug("Opening file with offset %u size %u\n", offset, size);
         m_data = new char[size];
@@ -83,6 +85,11 @@ public:
     }
     bool isRecent() const {
         return m_recent;
+    }
+    // get finger print of this block
+    // if this value changes, it means this block has alreay been reopened
+    unsigned getFingerPrint() const {
+        return m_finger_print;
     }
     // get integer reference at pos
     // negative pos is allowed and treated as indexing from the end

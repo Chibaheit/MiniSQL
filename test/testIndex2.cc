@@ -1,7 +1,7 @@
 #include "../src/index/index.h"
 #include <map>
 
-int defaultNumBlocks = 5, defaultBlockSize = 40;
+int defaultNumBlocks = 100, defaultBlockSize = 256;
 
 int R() {
     return abs((rand()<<8)^rand());
@@ -29,7 +29,7 @@ void random_erase(Index *index, int T) {
         if (it != D.end()) {
             D.erase(it->first);
             index->erase(PValue(new Int(it->first)));
-            index->print();
+            //index->print();
         }
     }
 }
@@ -59,8 +59,8 @@ int main() {
     Index *index = new Index("index.txt~", Type(INTTYPE, 4));
     debug("=== Creating index file...OK!\n");
     debug("=== Operating...\n");
-    int X=10, Y=5;
-    for(int i=0; i<1; ++i) {
+    int X=10, Y=5, T=5000;
+    for(int i=0; i<T; ++i) {
         random_insert(index, X);
         random_erase(index, Y);
         check(index);
@@ -68,12 +68,13 @@ int main() {
     Buffer::flush();
     delete index;
     index = new Index("index.txt~");
-    for(int i=0; i<1; ++i) {
+    for(int i=0; i<T; ++i) {
         random_insert(index, Y);
         random_erase(index, X);
         check(index);
     }
     debug("=== Operating...OK!\n");
     //index->print();
+    Buffer::flush();
     debug("##########Index is OK!###########\n\n");
 }

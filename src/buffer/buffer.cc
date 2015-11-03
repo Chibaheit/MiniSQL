@@ -130,6 +130,7 @@ void Block::open(FILE *file, unsigned offset, unsigned size) {
 	m_size = size;
 	m_recent = true;
 	m_dirty = m_pinned = false;
+    ++m_finger_print;
 	assert(fseek(file, offset, SEEK_SET)==0);
 	fread(m_data, 1, size, file);
 }
