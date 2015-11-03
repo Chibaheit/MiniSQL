@@ -85,19 +85,18 @@ public:
     }
     // shift elements in [begin, size()) to [begin + shamt, size() + shamt)
     void shiftRight(unsigned begin, unsigned shamt) const {
-        assert(begin >= 0 && begin + shamt < size());
+        assert(begin >= 0 && begin < size() && begin + shamt < n);
         set(Node::SIZE, size() + shamt);
-        for (unsigned i = size() - shamt - 1, j = size() - 1; i >= begin; --i, --j) {
-            setPtr(j, getPtr(i));
-            setKey(j, getKey(i));
+        for (int i = size() - shamt - 1, j = size() - 1; i >= (int)begin; --i, --j) {
+            setPair(j, getPair(i));
         }
     }
     // erase entries with index in range [begin, end)
     void erase(unsigned begin, unsigned end) const {
-        assert(begin >= 0 && begin < end && end <= size());
+        assert(begin >= 0 && begin <= end && end <= size());
+        if (begin == end) return;
         for (; end < size(); ++begin, ++end) {
-            setPtr(begin, getPtr(end));
-            setKey(begin, getKey(end));
+            setPair(begin, getPair(end));
         }
         set(Node::SIZE, begin);
     }
@@ -155,10 +154,11 @@ public:
     void print() const {
         #ifdef DEBUG
         debug(
-            "Node %u, root: %u, leaf: %u\n",
+            "Node %u, root: %u, leaf: %u, next: %u\n",
             m_block.index(),
             mask()&Node::ROOT,
-            mask()&Node::LEAF
+            mask()&Node::LEAF,
+            next()
         );
         for (unsigned i = 0; i < size(); ++i) {
             cerr<<*getKey(i)<<' '<<getPtr(i)<<endl;
@@ -308,7 +308,9 @@ public:
 
     // follow stl standard
     Iterator begin() {
-        return Iterator(*this, getHeader().begin(), 0);
+        unsigned id = getHeader().begin();
+        if (getNode(id).size()==0) return Iterator(*this, 0, 0);
+        else return Iterator(*this, id, 0);
     }
     Iterator end() {
         return Iterator(*this, 0, 0);
@@ -331,11 +333,15 @@ public:
 
     // erase the key equal to val
     // returns the number of nodes erased
-    unsigned erase(PValue val);
+    unsigned erase(PValue val) {
+        return erase(getHeader().root(), val);
+    }
 
     // erase the key denoted by the Iterator
     // returns the number of keys erased
-    unsigned erase(const Iterator &it);
+    unsigned erase(const Iterator &it) {
+        return erase(it.key());
+    }
 
     // for debug use only, print the info of the whole tree
     void print(unsigned blockIndex=0) {

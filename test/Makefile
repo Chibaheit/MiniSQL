@@ -3,7 +3,7 @@ COMMON_OBJS := ../src/common.o
 CC := g++
 COP := -std=c++11 -g
 
-TARGET := testIndex.run testNode.run testInt.run testFloat.run testString.run testBuffer.run
+TARGET := testIndex2.run testIndex1.run testNode.run testInt.run testFloat.run testString.run testBuffer.run
 
 .PHONY: all
 all: $(TARGET)
@@ -22,8 +22,11 @@ INDEX_PATH := ../src/index
 INDEX_OBJ := $(INDEX_PATH)/index.o
 INDEX_HEADER := $(INDEX_PATH)/index.h
 
-testIndex.o: testIndex.cc $(COMMON_HEADERS) $(BUFFER_HEADER) $(INDEX_HEADER)
+testIndex%.o: testIndex%.cc $(COMMON_HEADERS) $(BUFFER_HEADER) $(INDEX_HEADER)
 	$(CC) $(COP) -c $< -o $@
+
+testIndex%.exe: testIndex%.o $(INDEX_OBJ) $(BUFFER_OBJ)
+	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(INDEX_OBJ) -o $@
 
 %.exe: %.o
 	$(CC) $(COP) $< $(COMMON_OBJS) -o $@
@@ -31,8 +34,6 @@ testIndex.o: testIndex.cc $(COMMON_HEADERS) $(BUFFER_HEADER) $(INDEX_HEADER)
 testBuffer.exe: testBuffer.o $(BUFFER_OBJ)
 	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) -o $@
 
-testIndex.exe: testIndex.o $(INDEX_OBJ) $(BUFFER_OBJ)
-	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(INDEX_OBJ) -o $@
 testNode.exe: testNode.o $(INDEX_OBJ) $(BUFFER_OBJ)
 	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(INDEX_OBJ) -o $@
 
@@ -43,8 +44,8 @@ testBuffer.run: testBuffer.exe
 	time ./testBuffer.exe
 	rm test*.txt
 
-testIndex.run: testIndex.exe
-	time ./testIndex.exe
+testIndex%.run: testIndex%.exe
+	time ./@<
 	rm index.txt~
 
 testNode.run: testNode.exe

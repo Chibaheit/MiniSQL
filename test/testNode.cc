@@ -10,12 +10,11 @@ int main() {
     debug("=== Creating index file...\n");
     Index index("node.txt~", Type(INTTYPE, 4));
     debug("=== Creating index file...OK!\n");
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 100; ++i) {
         assert(index.getNewBlock() == i+2);
         unsigned id = rand()%(i+2);
-        debug("Accessing id = %u\n", id);
+        //debug("Accessing id = %u\n", id);
         Buffer::access("node.txt~", id);
-        debug("\n");
     }
     Buffer::flush();
 }

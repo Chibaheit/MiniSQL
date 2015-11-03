@@ -145,15 +145,19 @@ Index::Iterator Index::lower_bound(unsigned x, PValue val) {
     return lower_bound(node.getPtr(pos), val);
 }
 
+//#define DEBUG_INDEX_ERASE
 // returns whether additional adjustments needed
 bool Index::erase(unsigned x, PValue val) {
     Node node = getNode(x);
+    #ifdef DEBUG_INDEX_ERASE
+        cerr<<"erase("<<x<<", "<<*val<<")"<<endl;
+        node.print();
+    #endif
     unsigned pos = node.find(val);
     bool ret = false;
     if (pos == -1) return ret;
     if (node.mask() & Node::LEAF) {
-        PValue key = node.getKey(pos);
-        if (*key == *val) {
+        if (*node.getKey(pos) == *val) {
             node.erase(pos);
             ret = true;
         }
@@ -163,6 +167,10 @@ bool Index::erase(unsigned x, PValue val) {
             ret = adjust(x, pos);
         }
     }
+    #ifdef DEBUG_INDEX_ERASE
+    cerr<<"RET: "<<ret<<endl;
+    node.print();
+    #endif
     return ret;
 }
 
@@ -179,14 +187,14 @@ bool Index::adjust(unsigned x, unsigned pos) {
         unsigned v_id = u.getPtr(pos), w_id = u.getPtr(pos2);
         Node v = getNode(v_id);
         Node w = getNode(w_id);
-        if (merge(pos, pos2)) {
+        if (merge(v_id, w_id)) {
             u.erase(pos2);
             u.setKey(pos, v.getKey(0));
             ret = true;
             if ((u.mask() & Node::ROOT) && u.size() <= 1) {
                 eraseBlock(x);
                 v.set(Node::MASK, v.mask() | Node::ROOT);
-                getHeader().set(IndexHeader::ROOT, x);
+                getHeader().set(IndexHeader::ROOT, v_id);
                 ret = false;
             }
         } else {
@@ -200,14 +208,25 @@ bool Index::adjust(unsigned x, unsigned pos) {
     return ret;
 }
 
+//#define DEBUG_INDEX_MERGE
 bool Index::merge(unsigned p0, unsigned p1) {
     Node u = getNode(p0);
     Node v = getNode(p1);
+#ifdef DEBUG_INDEX_MERGE
+    debug("Before merge:\n");
+    u.print();
+    v.print();
+#endif
     if (u.size() + v.size() <= u.num()) {
         for (unsigned i = 0; i < v.size(); ++i) {
             u.insert(v.getPair(i));
         }
+        u.set(Node::NEXT, v.next());
         eraseBlock(v.m_block.index());
+    #ifdef DEBUG_INDEX_MERGE
+        debug("After merge:\n");
+        u.print();
+    #endif
         return true;
     } else {
         unsigned lnum = (u.size() + v.size() + 1) / 2;
@@ -224,6 +243,11 @@ bool Index::merge(unsigned p0, unsigned p1) {
             }
             v.erase(0, lnum - offset);
         }
+    #ifdef DEBUG_INDEX_MERGE
+        debug("After merge:\n");
+        u.print();
+        v.print();
+    #endif
         return false;
     }
 }
