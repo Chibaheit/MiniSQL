@@ -95,6 +95,7 @@ Block *Buffer::m_access(FILE *fp, unsigned offset, bool pinned) {
     }
 
     Block *block = m_blocks[entry->second];
+    block->setRecent();
     block->pin(pinned);
 
     inst->printOpenedBlocks();

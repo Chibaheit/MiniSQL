@@ -23,6 +23,7 @@ int main() {
         }
     }
     debug("=== Inserting...OK!\n");
+    Buffer::flush();
     debug("=== Iterating...\n");
     auto it = index.begin();
     for (auto u: D) {

@@ -55,12 +55,6 @@ private:
         #endif
         open(file, offset, size);
     }
-    void setRecent(bool recent) {
-        m_recent = recent;
-    }
-    bool isRecent() const {
-        return m_recent;
-    }
     friend Buffer;
 public:
     // returns block index
@@ -83,6 +77,12 @@ public:
     }
     void setDirty() {
         m_recent = m_dirty = true;
+    }
+    void setRecent(bool recent = true) {
+        m_recent = recent;
+    }
+    bool isRecent() const {
+        return m_recent;
     }
     // get integer reference at pos
     // negative pos is allowed and treated as indexing from the end
