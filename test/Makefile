@@ -6,10 +6,8 @@ COP := -std=c++11 -g -Ofast
 TARGET := testIndex2.run testIndex1.run testNode.run testInt.run testFloat.run testString.run testBuffer.run
 
 .PHONY: all
+.PHONY: %.run
 all: $(TARGET)
-
-%.o: %.cc $(COMMON_HEADERS)
-	$(CC) $(COP) -c $< -o $@
 
 BUFFER_PATH := ../src/buffer
 BUFFER_OBJ := $(BUFFER_PATH)/buffer.o
@@ -25,11 +23,11 @@ INDEX_HEADER := $(INDEX_PATH)/index.h
 testIndex%.o: testIndex%.cc $(COMMON_HEADERS) $(BUFFER_HEADER) $(INDEX_HEADER)
 	$(CC) $(COP) -c $< -o $@
 
+%.o: %.cc $(COMMON_HEADERS)
+	$(CC) $(COP) -c $< -o $@
+
 testIndex%.exe: testIndex%.o $(INDEX_OBJ) $(BUFFER_OBJ)
 	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(INDEX_OBJ) -o $@
-
-%.exe: %.o
-	$(CC) $(COP) $< $(COMMON_OBJS) -o $@
 
 testBuffer.exe: testBuffer.o $(BUFFER_OBJ)
 	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) -o $@
@@ -37,20 +35,23 @@ testBuffer.exe: testBuffer.o $(BUFFER_OBJ)
 testNode.exe: testNode.o $(INDEX_OBJ) $(BUFFER_OBJ)
 	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(INDEX_OBJ) -o $@
 
-%.run: %.exe
-	time ./$<
-
-testBuffer.run: testBuffer.exe
-	time ./testBuffer.exe
-	rm test*.txt
+%.exe: %.o
+	$(CC) $(COP) $< $(COMMON_OBJS) -o $@
 
 testIndex%.run: testIndex%.exe
-	time ./@<
+	time ./$<
 	rm index.txt~
 
+testBuffer.run: testBuffer.exe
+	./testBuffer.exe
+	rm test*.txt
+
 testNode.run: testNode.exe
-	time ./testNode.exe
+	./testNode.exe
 	rm node.txt~
+
+%.run: %.exe
+	./$<
 
 clean_o:
 	rm -f *.o
