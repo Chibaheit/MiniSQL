@@ -5,11 +5,11 @@
 
 // use history to save minisql script
 namespace INPUT {
-  bool readLine(std::string& chunk, std::string shell_prompt);
+    bool readLine(std::string& chunk, std::string shell_prompt);
 
-  int initialization();
+    int initialization();
 
-  int saveCommand();
+    int saveCommand();
 }
 
 #endif
