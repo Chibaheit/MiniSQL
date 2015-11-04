@@ -163,6 +163,15 @@ public:
     static FILE *getFile(const string &filePath);
     // flush all blocks to files
     static void flush();
+    // test whether filename exists as a file
+    static bool exists(const string &filename) {
+        FILE *fp = fopen(filename.c_str(), "r");
+        if (fp) {
+            fclose(fp);
+            return true;
+        }
+        return false;
+    }
 };
 
 #endif
