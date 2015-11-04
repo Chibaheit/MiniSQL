@@ -164,14 +164,12 @@ public:
     // flush all blocks to files
     static void flush();
     // test whether filename exists as a file
-    static bool exists(const string &filename) {
-        FILE *fp = fopen(filename.c_str(), "r");
-        if (fp) {
-            fclose(fp);
-            return true;
-        }
-        return false;
-    }
+    static bool exists(const string &filename);
+    // truncate the file to numBlocks * defaultBlockSize number of bytes
+    // returns whether operation succeeded
+    static bool truncate(FILE *file, unsigned numBlocks);
+    // deletes a file, returns whether succeeded
+    static bool remove(const string &filename);
 };
 
 #endif

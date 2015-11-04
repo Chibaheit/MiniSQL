@@ -1,5 +1,8 @@
 #include "buffer.h"
 #include <cassert>
+#include <unistd.h>
+#include <sys/types.h>
+#include <cstdio>
 
 Buffer::Buffer(unsigned size, unsigned block_size):
     m_size(size), m_block_size(block_size), m_now(0) {
@@ -133,4 +136,25 @@ void Block::open(FILE *file, unsigned offset, unsigned size) {
     ++m_finger_print;
 	assert(fseek(file, offset, SEEK_SET)==0);
 	fread(m_data, 1, size, file);
+}
+
+// test whether filename exists as a file
+bool Buffer::exists(const string &filename) {
+    FILE *fp = fopen(filename.c_str(), "r");
+    if (fp) {
+        fclose(fp);
+        return true;
+    }
+    return false;
+}
+
+// truncate the file to numBlocks * defaultBlockSize number of bytes
+// returns whether operation succeeded
+bool Buffer::truncate(FILE *file, unsigned numBlocks) {
+    return ftruncate(fileno(file), numBlocks * defaultBlockSize) == 0;
+}
+
+// deletes a file, returns whether succeeded
+bool Buffer::remove(const string &filename) {
+    return remove(filename.c_str()) == 0;
 }
