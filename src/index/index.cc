@@ -75,12 +75,14 @@ void Node::split(PValue val, unsigned ptr, Node &des) const {
 }
 
 // insert val into the Index
-// returning end() means insertion failed
-void Index::insert(PValue val, unsigned ptr) {
-    insert(getHeader().root(), val, ptr);
+// returns whether insertion is successful (There isn't a duplicate key)
+bool Index::insert(PValue val, unsigned ptr) {
+    bool ret = false;
+    insert(getHeader().root(), val, ptr, ret);
+    return ret;
 }
 
-pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
+pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr, bool &success) {
     Node node = getNode(x);
     #ifdef DEBUG_INDEX_INSERT
         cerr<<"insert("<<x<<", "<<*val<<", "<<ptr<<")"<<endl;
@@ -93,11 +95,17 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
             pos = 0;
             node.setKey(0, val);
         }
-        auto tmp = insert(node.getPtr(pos), val, ptr);
+        auto tmp = insert(node.getPtr(pos), val, ptr, success);
         if (tmp.second) {
             val = tmp.first;
             ptr = tmp.second;
         } else return ret;
+    } else {
+        unsigned pos = node.find(val);
+        if (~pos && *node.getKey(pos) == *val) {
+            success = false;
+            return ret;
+        } else success = true;
     }
     Node u = getNode(x, true);
     if (!u.insert(val, ptr)) {
@@ -112,11 +120,12 @@ pair<PValue , unsigned> Index::insert(unsigned x, PValue val, unsigned ptr) {
         u.split(val, ptr, v);
         if (root) {
             unsigned z = getNewBlock();
-            Node w = getNode(z);
+            Node w = getNode(z, true);
             w.initialize(Node::ROOT);
             getHeader().set(IndexHeader::ROOT, z);
             w.insert(u.getKey(0), x);
             w.insert(v.getKey(0), y);
+            w.m_block.pin(false);
         } else ret = make_pair(v.getKey(0), y);
         v.m_block.pin(false);
     }
@@ -147,7 +156,8 @@ Index::Iterator Index::lower_bound(unsigned x, PValue val) {
 
 //#define DEBUG_INDEX_ERASE
 // returns whether additional adjustments needed
-bool Index::erase(unsigned x, PValue val) {
+// success returns whether erasing succeeded
+bool Index::erase(unsigned x, PValue val, bool &success) {
     Node node = getNode(x);
     #ifdef DEBUG_INDEX_ERASE
         cerr<<"erase("<<x<<", "<<*val<<")"<<endl;
@@ -160,9 +170,10 @@ bool Index::erase(unsigned x, PValue val) {
         if (*node.getKey(pos) == *val) {
             node.erase(pos);
             ret = true;
-        }
+            success = true;
+        } else success = false;
     } else {
-        bool tmp = erase(node.getPtr(pos), val);
+        bool tmp = erase(node.getPtr(pos), val, success);
         if (tmp) {
             ret = adjust(x, pos);
         }
@@ -215,6 +226,7 @@ bool Index::adjust(unsigned x, unsigned pos) {
 }
 
 //#define DEBUG_INDEX_MERGE
+// returns whether merging two blocks into one was successful
 bool Index::merge(unsigned p0, unsigned p1) {
     Node u = getNode(p0, true);
     Node v = getNode(p1, true);

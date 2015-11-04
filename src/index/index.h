@@ -216,8 +216,8 @@ public:
 private:
     Type m_type;
     FILE *m_file;
-    pair<PValue , unsigned> insert(unsigned x, PValue val, unsigned ptr);
-    bool erase(unsigned x, PValue val);
+    pair<PValue , unsigned> insert(unsigned x, PValue val, unsigned ptr, bool &success);
+    bool erase(unsigned x, PValue val, bool &success);
     bool adjust(unsigned x, unsigned pos);
     bool merge(unsigned p0, unsigned p1);
     Iterator upper_bound(unsigned x, PValue val);
@@ -298,6 +298,9 @@ public:
         bool operator==(const Iterator &rhs) const {
             return i == rhs.i && j == rhs.j;
         }
+        bool operator!=(const Iterator &rhs) const {
+            return i != rhs.i || j != rhs.j;
+        }
         PValue key() const {
             return node().getKey(j);
         }
@@ -317,7 +320,8 @@ public:
     }
 
     // insert val into the Index
-    void insert(PValue val, unsigned ptr);
+    // returns whether insertion is successful (There isn't a duplicate key)
+    bool insert(PValue val, unsigned ptr);
 
     // find the last position where key is not larger than val
     // returning end() means all keys are larger than val
@@ -334,7 +338,9 @@ public:
     // erase the key equal to val
     // returns the number of nodes erased
     unsigned erase(PValue val) {
-        return erase(getHeader().root(), val);
+        bool ret = false;
+        erase(getHeader().root(), val, ret);
+        return ret;
     }
 
     // erase the key denoted by the Iterator

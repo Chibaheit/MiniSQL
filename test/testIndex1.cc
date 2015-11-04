@@ -4,8 +4,9 @@
 
 int defaultNumBlocks = 100, defaultBlockSize = 256;
 
+int range = 100000;
 int R() {
-    return (rand()<<15)^rand();
+    return abs(((rand()<<15)^rand()) % range);
 }
 
 map<int, int> D;
@@ -18,7 +19,7 @@ void random_insert(Index *index, int T) {
             D[x] = y;
             index->insert(PValue(new Int(x)), y);
             //index->print();
-        }
+        } else assert(index->insert(PValue(new Int(x)), y) == false);
     }
     debug("=== Inserting...OK!\n");
 }
@@ -44,17 +45,18 @@ void check(Index *index) {
 
 int main() {
     unsigned seed = time(0);
-    debug("seed = %u\n", seed);
     srand(seed);
+    range = R() % 1000000 + 1;
+    debug("seed = %u, range = %d\n", seed, range);
     debug("=== Creating index file...\n");
     Index *index = new Index("index.txt~", Type(INTTYPE, 4));
     debug("=== Creating index file...OK!\n");
-    random_insert(index, 25000);
-    Buffer::flush();
+    random_insert(index, 100000);
     delete index;
+    Buffer::flush();
     index = new Index("index.txt~");
     check(index);
-    random_insert(index, 25000);
+    random_insert(index, 100000);
     check(index);
     //index->print();
     Buffer::flush();
