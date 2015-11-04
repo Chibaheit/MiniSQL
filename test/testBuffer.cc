@@ -31,6 +31,7 @@ int main() {
         p[i]=i+'0';
     }
     debug("\n");
+    Buffer::flush();
 
     for(int i=0; i<NUM; ++i) {
         Block *block = Buffer::access(s[i%3], i);
@@ -46,5 +47,6 @@ int main() {
         const char *p = block->constData();
         assert(p[i]==i+'0');
     }
+    Buffer::flush();
     printf("Buffer: OK!\n\n");
 }

@@ -9,7 +9,7 @@ Index::Index(const string &filepath, const Type &type): m_type(type) {
     m_file = Buffer::getFile(filepath);
     IndexHeader header(Buffer::access(m_file, 0, true));
     header.initialize(type);
-    Node root(Buffer::access(m_file, 1), type);
+    Node root = getNode(1);
     root.initialize(Node::LEAF | Node::ROOT);
     debug("Number of children = %u\n", root.num());
     debug("Index created.\n");

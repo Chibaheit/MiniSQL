@@ -3,7 +3,7 @@ COMMON_OBJS := ../src/common.o
 CC := g++
 COP := -std=c++11 -g -Ofast
 
-TARGET := testIndex2.run testIndex1.run testNode.run testInt.run testFloat.run testString.run testBuffer.run
+TARGET := testNode.run testInt.run testFloat.run testString.run testBuffer.run testIndex1.run testIndex2.run
 
 .PHONY: all
 .PHONY: %.run
@@ -39,7 +39,7 @@ testNode.exe: testNode.o $(INDEX_OBJ) $(BUFFER_OBJ)
 	$(CC) $(COP) $< $(COMMON_OBJS) -o $@
 
 testIndex%.run: testIndex%.exe
-	time ./$<
+	./$<
 	rm index.txt~
 
 testBuffer.run: testBuffer.exe

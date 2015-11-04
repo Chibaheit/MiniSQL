@@ -1,5 +1,6 @@
 #include "../src/index/index.h"
 #include <map>
+#include <ctime>
 
 int defaultNumBlocks = 3, defaultBlockSize = 4096;
 
