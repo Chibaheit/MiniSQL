@@ -13,7 +13,7 @@ map<int, int> D;
 void random_insert(Index *index, int T) {
     while(T--){
         int x, y;
-        x = R() % 500, y = R() % 500;
+        x = R() + 1, y = R() + 1;
         //debug("%d %d\n", x, y);
         PValue val(new Int(x));
         if (D.find(x) == D.end()) {
@@ -27,7 +27,7 @@ void random_insert(Index *index, int T) {
 void random_erase(Index *index, int T) {
     //index->print();
     while(T--){
-        int x = R() % 500;
+        int x = R() + 1;
         auto it = D.lower_bound(x);
         if (it != D.end()) {
             PValue val(new Int(it->first));
@@ -64,7 +64,7 @@ int main() {
     Index *index = new Index("index.txt~", Type(INTTYPE, 4));
     debug("=== Creating index file...OK!\n");
     debug("=== Operating...\n");
-    int X=R()%99+1, Y=100-X, T=5000;
+    int X=R()%99+1, Y=100-X, T=500;
     if(X<Y)swap(X,Y);
     for(int i=0; i<T; ++i) {
         random_insert(index, X);
