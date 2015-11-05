@@ -14,7 +14,7 @@ bool Catalog::loadSchema(string tableName) {
         return true;
     
     string fileName = tableName + ".catalog";
-    if (access(fileName.c_str(), 0) == -1)
+    if (Buffer::exists(fileName))
         return false;
     
     clearSchema();
@@ -31,7 +31,7 @@ bool Catalog::loadSchema(string tableName) {
         
         for (int i = 0; i < block->size(); i++) {
             char ch = data[i];
-            if (ch == 1) {
+            if (ch == 0) {
                 if (++zeroCount == 1)
                 switch (curInfoType) {
                     case ATTRNAME: {
@@ -101,29 +101,29 @@ bool Catalog::storeSchema() {
     
     for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++) {
         save(itr->attrName, blockIndex, offset);
-        save('\1', blockIndex, offset);
+        save('\0', blockIndex, offset);
         if (itr->attrType == INTTYPE)
             save('0', blockIndex, offset);
         else if (itr->attrType == CHARTYPE)
             save('1', blockIndex, offset);
         else save('2', blockIndex, offset);
-        save('\1', blockIndex, offset);
+        save('\0', blockIndex, offset);
         char ch = itr->length;
         string str = "";
         str += ch;
         save(str, blockIndex, offset);
-        save('\1', blockIndex, offset);
+        save('\0', blockIndex, offset);
         if (itr->unique)
             save('1', blockIndex, offset);
         else save('0', blockIndex, offset);
-        save('\1', blockIndex, offset);
+        save('\0', blockIndex, offset);
         if (itr->primary)
             save('1', blockIndex, offset);
         else save('0', blockIndex, offset);
-        save('\1', blockIndex, offset);
-        save('\1', blockIndex, offset);
+        save('\0', blockIndex, offset);
+        save('\0', blockIndex, offset);
     }
-    save('\1', blockIndex, offset);
+    save('\0', blockIndex, offset);
     return true;
 }
 
@@ -216,6 +216,30 @@ bool Catalog::createIndex(string tableName, string attributeName, string indexNa
             itr->indexList.push_back(indexName);
     storeSchema();
     return true;
+}
+
+bool Catalog::dropTable(string tableName) {
+    if (!checkTableExist(tableName))
+        return false;
+    Buffer::remove(tableName + ".catalog");
+    return true;
+}
+
+bool Catalog::dropIndex(string tableName, string indexName) {
+    if (!loadSchema(tableName))
+        return false;
+    if (!checkIndexExist(tableName, indexName))
+        return false;
+    for (vector<AttrDetail>::iterator aitr = schema.attrDetailList.begin(); aitr != schema.attrDetailList.end(); aitr++) {
+        for (vector<string>::iterator sitr = aitr->indexList.begin(); sitr != aitr->indexList.end();) {
+            if (*sitr == indexName) {
+                aitr->indexList.erase(sitr++);
+                return true;
+            }
+            else sitr++;
+        }
+    }
+    return storeSchema();
 }
 
 int Catalog::getAttributeSize(string tableName, string attributeName) {

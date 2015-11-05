@@ -78,6 +78,10 @@ public:
     
     bool createIndex(string tableName, string attributeName, string indexName);
     
+    bool dropTable(string tableName);
+    
+    bool dropIndex(string tableName, string indexName);
+    
     int getAttributeSize(string tableName, string attributeName);
     
     int getAttributesTotalSize(string tableName);

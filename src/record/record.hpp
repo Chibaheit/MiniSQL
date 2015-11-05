@@ -30,20 +30,21 @@ class Record{
     void storeData(int intData, char *data, int &curOffset);
     void storeData(float floatData, char *data, int &curOffset);
     void storeData(string stringData, char *data,  int &curOffset);
-    Tuple loadTuple(int fromBlockIndex, int fromOffset);
+    bool loadTuple(Tuple &tuple, int &fromBlockIndex, int &fromOffset);
     void deleteTuple(int fromBlockIndex, int fromOffset);
     void storeTuple(Tuple &tuple, int &fromBlockIndex, int &fromOffset);
-    Tuple loadLastTuple();
-    void deleteLastTuple();
+//    bool loadLastTuple(Tuple &tuple);
+//    void deleteLastTuple();
     bool match(Tuple &tuple, vector<QueryDetail> &queryList);
+    bool crash();
 public:
     Record(string tableName);
     ~Record();
-    void createTable(int numAttribute, attributeType *attrType, int *attrSize);
+    bool createTable(vector<attributeType> attrType, vector<int> attrSize);
     
-    bool dropTable();
+    bool dropTable();  
     
-    void insert(Tuple &valueList);
+    bool insert(Tuple &valueList, vector<int> primaryOrUniquePosition);
     
     void deleteTuple(vector<QueryDetail> &queryList);
 

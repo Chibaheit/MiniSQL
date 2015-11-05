@@ -8,10 +8,13 @@
 
 #include "record.hpp"
 #include "../buffer/buffer.h"
+#include <string.h>
 #include <sstream>
 
 Record::Record(string tableName) : tableName(tableName) {
-    loadStatusAndInfo();
+    if (Buffer::exists(tableName + ".record"))
+        loadStatusAndInfo();
+    else exist = false;
 }
 
 Record::~Record() {
@@ -33,8 +36,6 @@ void Record::loadStatusAndInfo() {
     offset = data[5] * 256 + data[6];
     tupleSize = data[7] * 256 + data[8];
     numAttr = data[9];
-    if (attrInfo != NULL)
-        delete []attrInfo;
     attrInfo = new AttrInfo[numAttr];
     for (int i = 0; i < numAttr; i++) {
         char ch = data[8 + 2 * i];
@@ -51,8 +52,7 @@ void Record::storeStatusAndInfo() {
     Block *block = Buffer::access(tableName + ".record", 0);
     char *data = block->data();
     if (!exist)
-        for (int i = 0; i < 7; i++)
-            data[i] = 0;
+        data[0] = 0;
     else {
         data[0] = 1;
         int tmp = blockIndex;
@@ -65,13 +65,14 @@ void Record::storeStatusAndInfo() {
         data[7] = tupleSize / 256;
         data[8] = tupleSize % 256;
         data[9] = numAttr;
+        int curOft = 10;
         for (int i = 0; i < numAttr; i++) {
             if (attrInfo[i].type == INTTYPE)
-                data[offset++] = 0;
+                data[curOft++] = 0;
             else if (attrInfo[i].type == FLOATTYPE)
-                data[offset++] = 1;
-            else data[offset++] = 2;
-            data[offset++] = attrInfo[i].size;
+                data[curOft++] = 1;
+            else data[curOft++] = 2;
+            data[curOft++] = attrInfo[i].size;
         }
     }
 }
@@ -85,11 +86,10 @@ void Record::storeData(int intData, char *data, int &curOffset) {
 }
 
 void Record::storeData(float floatData, char *data, int &curOffset) {
-    int tmp = static_cast<int>(floatData);
-    data[curOffset++] = (tmp & 0xff000000) >> 24;
-    data[curOffset++] = (tmp & 0x00ff0000) >> 16;
-    data[curOffset++] = (tmp & 0x0000ff00) >> 8;
-    data[curOffset++] = (tmp & 0x000000ff);
+    char *tmp = new char[4];
+    memcpy(tmp, &floatData, 4);
+    for (int i = 0; i < 4; i++)
+        data[curOffset++] = tmp[i];
 }
 
 void Record::storeData(string stringData, char *data, int &curOffset) {
@@ -97,10 +97,14 @@ void Record::storeData(string stringData, char *data, int &curOffset) {
         data[curOffset++] = stringData.at(i);
 }
 
-Tuple Record::loadTuple(int fromBlockIndex, int fromOffset) {
+bool Record::loadTuple(Tuple &tuple, int &fromBlockIndex, int &fromOffset) {
     Block *block = Buffer::access(tableName + ".record", fromBlockIndex);
     const char *data = block->constData();
-    Tuple tuple;
+    if (data[fromOffset] == 0) {
+        fromOffset += tupleSize;
+        return false;
+    }
+    else fromOffset++;
     for (int i = 0; i < numAttr; i++) {
         string str = "";
         for (int j = 0; j < attrInfo[i].size; j++)
@@ -118,13 +122,15 @@ Tuple Record::loadTuple(int fromBlockIndex, int fromOffset) {
                 break;
             }
             case FLOATTYPE: {
-                unsigned int tmp = str.at(0);
-                tmp = tmp * 256 + str.at(1);
-                tmp = tmp * 256 + str.at(2);
-                tmp = tmp * 256 + str.at(3);
-                float floatData = static_cast<float>(tmp);
+                char *tmp = new char[4];
+                tmp[0] = str.at(0);
+                tmp[1] = str.at(1);
+                tmp[2] = str.at(2);
+                tmp[3] = str.at(3);
+                float *floatData = new float;
+                memcpy(floatData, tmp, 4);         
                 stringstream ss;
-                ss << floatData;
+                ss << *floatData;
                 tuple.push_back(ValueDetail(curType, ss.str()));
                 break;
             }
@@ -136,14 +142,13 @@ Tuple Record::loadTuple(int fromBlockIndex, int fromOffset) {
                 break;
         }
     }
-    return tuple;
+    return true;
 }
 
 void Record::deleteTuple(int fromBlockIndex, int fromOffset) {
     Block *block = Buffer::access(tableName + ".record", fromBlockIndex);
     char *data = block->data();
-    for (int i = 0; i < tupleSize; i++)
-        data[fromOffset + i] = 0;
+    data[fromOffset] = 0;
 }
 
 void Record::storeTuple(Tuple &tuple, int &fromBlockIndex, int &fromOffset) {
@@ -154,6 +159,7 @@ void Record::storeTuple(Tuple &tuple, int &fromBlockIndex, int &fromOffset) {
     string fileName = tableName + ".record";
     Block *block = Buffer::access(fileName, fromBlockIndex);
     char *data = block->data();
+    data[fromOffset++] = 1; 
     for (vector<ValueDetail>::iterator itr = tuple.begin(); itr != tuple.end(); itr++) {
         switch (itr->type) {
             case INTTYPE: {
@@ -177,7 +183,8 @@ void Record::storeTuple(Tuple &tuple, int &fromBlockIndex, int &fromOffset) {
     }
 }
 
-Tuple Record::loadLastTuple() {
+/*
+bool Record::loadLastTuple(Tuple &tuple) {
     int curBlockIndex, curOffset;
     if (offset == 0) {
         curBlockIndex = blockIndex - 1;
@@ -187,8 +194,7 @@ Tuple Record::loadLastTuple() {
         curBlockIndex = blockIndex;
         curOffset = offset - tupleSize;
     }
-    Tuple tuple = loadTuple(curBlockIndex, curOffset);
-    return tuple;
+    return loadTuple(tuple, curBlockIndex, curOffset);
 }
 
 void Record::deleteLastTuple() {
@@ -199,6 +205,7 @@ void Record::deleteLastTuple() {
     else offset -= tupleSize;
     deleteTuple(blockIndex, offset);
 }
+*/
 
 bool Record::match(Tuple &tuple, vector<QueryDetail> &queryList) {
     Value *vpx, *vpy;
@@ -265,32 +272,59 @@ bool Record::match(Tuple &tuple, vector<QueryDetail> &queryList) {
     return true;
 }
 
-void Record::createTable(int numAttribute, attributeType *attrType, int *attrSize) {
+bool Record::createTable(vector<attributeType> attrType, vector<int> attrSize) {
+    if (attrType.size() != attrSize.size())
+        return false;
     exist = true;
     blockIndex = 0;
-    offset = 10 + numAttribute * 2;
-    numAttr = numAttribute;
+    numAttr = attrType.size();
+    offset = 10 + numAttr * 2;
     attrInfo = new AttrInfo[numAttr];
-    tupleSize = 0;
-    for (int i = 0; i < numAttribute; i++) {
-        attrInfo[i].type = attrType[i];
-        attrInfo[i].size = attrSize[i];
-        tupleSize += attrSize[i];
+    tupleSize = 1;
+    for (int i = 0; i < numAttr; i++) {
+        attrInfo[i].type = attrType.at(i);
+        attrInfo[i].size = attrSize.at(i);
+        tupleSize += attrSize.at(i);
     }
     offset = (offset / tupleSize + 1) * tupleSize;
     storeStatusAndInfo();
+    return true;
 }
 
 bool Record::dropTable() {
     if (!exist)
         return false;
     exist = false;
-    storeStatusAndInfo();
+    //storeStatusAndInfo();
+    Buffer::remove(tableName + ".record");
     return true;
 }
 
-void Record::insert(Tuple &valueList) {
+bool Record::insert(Tuple &valueList, vector<int> primaryOrUniquePosition) {
+    // check whether unique or primary attribute duplicated
+    dataBegin = 10 + numAttr * 2;
+    dataBegin = (dataBegin / tupleSize + 1) * tupleSize;
+    int curOffset = dataBegin;
+    int curBlockIndex = 0;
+    while (true) {
+        if (curOffset + tupleSize >= defaultBlockSize) {
+            curBlockIndex++;
+            curOffset = 0;
+        }
+        if (curBlockIndex > blockIndex)
+            break;
+        else if (curBlockIndex == blockIndex && curOffset >= offset)
+            break;
+        Tuple curTuple;
+        if (!loadTuple(curTuple, curBlockIndex, curOffset))
+            continue;
+        for (vector<int>::iterator itr = primaryOrUniquePosition.begin(); itr != primaryOrUniquePosition.end(); itr++) {
+            if (curTuple.at(*itr).value == valueList.at(*itr).value)
+                return false;
+        }
+    }
     storeTuple(valueList, blockIndex, offset);
+    return true;
 }
 
 void Record::deleteTuple(vector<QueryDetail> &queryList) {
@@ -307,25 +341,14 @@ void Record::deleteTuple(vector<QueryDetail> &queryList) {
             break;
         else if (curBlockIndex == blockIndex && curOffset >= offset)
             break;
-        
-        Tuple curTuple = loadTuple(curBlockIndex, curOffset);
-        if (!match(curTuple, queryList)) {
-            curOffset += tupleSize;
+        Tuple curTuple;
+        int tmpBlockIndex = curBlockIndex;
+        int tmpOffset = curOffset;
+        if (!loadTuple(curTuple, curBlockIndex, curOffset))
             continue;
-        }
-        deleteTuple(curBlockIndex, curOffset);
-        Tuple lastTuple = loadLastTuple();
-        deleteLastTuple();
-        if (lastTuple.size() != 0)
-            while (match(lastTuple, queryList)) {
-                lastTuple = loadLastTuple();
-                deleteLastTuple();
-                if (lastTuple.size() == 0)
-                    break;
-            }
-        if (lastTuple.size() != 0)
-            storeTuple(lastTuple, curBlockIndex, curOffset);
-        else break;
+        if (!match(curTuple, queryList))
+            continue;
+        deleteTuple(tmpBlockIndex, tmpOffset);
     }
 }
 
@@ -345,8 +368,9 @@ void Record::select(vector<QueryDetail> &queryList, Table &table) {
             break;
         else if (curBlockIndex == blockIndex && curOffset >= offset)
             break;
-        
-        Tuple curTuple = loadTuple(curBlockIndex, curOffset);
+        Tuple curTuple;
+        if (!loadTuple(curTuple, curBlockIndex, curOffset))
+            continue;
         if (match(curTuple, queryList))
             table.push_back(curTuple);
     }
