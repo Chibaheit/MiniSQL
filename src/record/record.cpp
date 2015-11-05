@@ -6,21 +6,19 @@
 //  Copyright © 2015年 scn3. All rights reserved.
 //
 
-#include "record.hpp"
+#include "../record.hpp"
 #include "../buffer/buffer.h"
 #include <string.h>
 #include <sstream>
 
 Record::Record(string tableName) : tableName(tableName) {
-    if (Buffer::exists(tableName + ".record"))
+//    string fileName = tableName + ".record";
+//    if (access(fileName.c_str(), 0) != -1)
         loadStatusAndInfo();
-    else exist = false;
+//    else exist = false;
 }
 
-Record::~Record() {
-    if (attrInfo != NULL)
-        delete []attrInfo;
-}
+Record::~Record() {}
 
 void Record::loadStatusAndInfo() {
     Block *block = Buffer::access(tableName + ".record", 0);
@@ -295,8 +293,8 @@ bool Record::dropTable() {
     if (!exist)
         return false;
     exist = false;
-    //storeStatusAndInfo();
-    Buffer::remove(tableName + ".record");
+    storeStatusAndInfo();
+//    Buffer::remove(tableName + ".record");
     return true;
 }
 

@@ -14,7 +14,13 @@ bool Catalog::loadSchema(string tableName) {
         return true;
     
     string fileName = tableName + ".catalog";
-    if (Buffer::exists(fileName))
+//    if (Buffer::exists(fileName))
+//        return false;
+//    if (access(fileName.c_str(), 0) == -1)
+//        return false;
+    Block *block = Buffer::access(fileName, 0);
+    const char *data = block->constData();
+    if (data[0] == 0)
         return false;
     
     clearSchema();
@@ -25,11 +31,14 @@ bool Catalog::loadSchema(string tableName) {
     int zeroCount = 0;  // 连续的0的个数，一个0表示字符串结束，两个0表示attr结束（包括其index），三个0表示table结束；
     
     int blockIndex = 0;
+    int fromOffset;
     while (true) {
+        if (blockIndex == 0)
+            fromOffset = 1;
+        else fromOffset = 0;
         Block *block = Buffer::access(fileName, blockIndex++);
         const char *data = block->constData();
-        
-        for (int i = 0; i < block->size(); i++) {
+        for (int i = fromOffset; i < block->size(); i++) {
             char ch = data[i];
             if (ch == 0) {
                 if (++zeroCount == 1)
@@ -97,7 +106,10 @@ bool Catalog::storeSchema() {
     
     string fileName = schema.tableName + ".catalog";
     int blockIndex = 0;
-    int offset = 0;
+    int offset = 1;
+    Block *block = Buffer::access(fileName, 0);
+    char *data = block->data();
+    data[0] = 1;
     
     for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++) {
         save(itr->attrName, blockIndex, offset);
@@ -191,8 +203,10 @@ bool Catalog::getIndexList(string tableName, string attributeName, Strings index
     return false;
 }
 
-void Catalog::createTable(string tableName, vector<AttributeDetail> &attributeList) {
+bool Catalog::createTable(string tableName, vector<AttributeDetail> &attributeList) {
     clearSchema();
+    if (checkTableExist(tableName))
+        return false;
     schema.tableName = tableName;
     for (vector<AttributeDetail>::iterator itr = attributeList.begin(); itr != attributeList.end(); itr++) {
         AttrDetail attrDetail;
@@ -206,10 +220,15 @@ void Catalog::createTable(string tableName, vector<AttributeDetail> &attributeLi
         schema.attrDetailList.push_back(attrDetail);
     }
     storeSchema();
+    return true;
 }
 
 bool Catalog::createIndex(string tableName, string attributeName, string indexName) {
     if (!loadSchema(tableName))
+        return false;
+    if (!checkAttributeExist(tableName, attributeName))
+        return false;
+    if (checkIndexExist(tableName, indexName))
         return false;
     for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++)
         if (itr->attrName == attributeName)
@@ -221,7 +240,11 @@ bool Catalog::createIndex(string tableName, string attributeName, string indexNa
 bool Catalog::dropTable(string tableName) {
     if (!checkTableExist(tableName))
         return false;
-    Buffer::remove(tableName + ".catalog");
+    Block *block = Buffer::access(tableName + ".catalog", 0);
+    char *data = block->data();
+    data[0] = 0;
+    tableName = "";
+    clearSchema();
     return true;
 }
 
