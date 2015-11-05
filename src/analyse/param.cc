@@ -70,8 +70,21 @@ namespace PARAM {
         return s;
     }
 
-    string rmSpace(string s) {
+    string rmSpaceAndBracket(string s) {
         string res = "";
+        string rS = string(s.rbegin(), s.rend());
+        size_t pos, rPos;
+        size_t length = s.length();
+        try {
+            pos = s.find('('); rPos = rS.find(')');
+            s[pos] = ' '; s[length - 1 - rPos] = ' ';
+
+            if ((pos != string::npos && rPos == string::npos) || (pos == string::npos && rPos != string::npos) || (pos + rPos > length - 1)) {
+                throw invalid_argument("unmatched bracket.");
+            }
+        } catch (invalid_argument& e) {
+            cout << "Syntax Error: " << e.what() << endl;
+        }
         size_t st = 0, ed = s.length();
         while (ed > 0 && s[ed - 1] == ' ') {
           --ed;
@@ -102,22 +115,8 @@ namespace PARAM {
         return res;
     }
 
-    vector<string> Fragment(string& s, char separator) {
+    vector<string> Split(string& s, char separator) {
         vector<string> res;
-        string rS = string(s.rbegin(), s.rend());
-        size_t pos, rPos;
-        size_t length = s.length();
-        try {
-            pos = s.find('('); rPos = rS.find(')');
-            s[pos] = ' '; s[length - 1 - rPos] = ' ';
-
-            if ((pos != string::npos && rPos == string::npos) || (pos == string::npos && rPos != string::npos) || (pos + rPos > length - 1)) {
-                throw invalid_argument("unmatched bracket.");
-            }
-        } catch (invalid_argument& e) {
-            cout << "Syntax Error: " << e.what() << endl;
-        }
-        s = rmSpace(s);
         string tmp = "";
         for (size_t i = 0; i < s.length(); i++) {
             if (s[i] == separator) {
@@ -127,7 +126,9 @@ namespace PARAM {
                 tmp += s[i];
             }
         }
-        res.push_back(tmp);
+        if (tmp != "") {
+            res.push_back(tmp);
+        }
         return res;
     }
 }
