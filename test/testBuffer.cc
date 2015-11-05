@@ -1,6 +1,6 @@
 #include "../src/buffer/buffer.h"
 #include <cassert>
-#define NUM 9
+#define NUM 5
 
 int defaultNumBlocks = 2, defaultBlockSize = 4096;
 
@@ -11,7 +11,7 @@ const char *s[] = {
 };
 
 char data[1123];
-void testFile(){
+void testFile() {
     FILE *fp = fopen("test.txt", "rb+");
     assert(fseek(fp, 100, SEEK_SET)==0);
     //fwrite(s[0], 1, sizeof("test.txt"), fp);
@@ -31,6 +31,7 @@ int main() {
         p[i]=i+'0';
     }
     debug("\n");
+    Buffer::flush();
 
     for(int i=0; i<NUM; ++i) {
         Block *block = Buffer::access(s[i%3], i);
@@ -46,5 +47,6 @@ int main() {
         const char *p = block->constData();
         assert(p[i]==i+'0');
     }
+    Buffer::flush();
     printf("Buffer: OK!\n\n");
 }

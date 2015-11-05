@@ -2,7 +2,15 @@
 DBMS Project
 
 ## Dependencies
-- clang++ 
+- clang++
+
+## Build Instructions
+```
+cd src
+make
+cd test
+make
+```
 
 ## Usage
 

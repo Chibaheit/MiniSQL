@@ -21,3 +21,6 @@ log
 
 # generated programs
 *.exe
+
+# Mac OS files
+.DS_Store

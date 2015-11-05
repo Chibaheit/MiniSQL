@@ -1,10 +1,8 @@
 #include "../src/common.h"
 #include <cassert>
 int main(){
-    Value *x, *y, *z;
-    x = new Int(9);
-    y = new Int(-10);
-    z = new Int(9);
+    debug("Testing Int class...\n");
+    PValue x(new Int(9)), y(new Int(-10)), z(new Int(9));
 
     assert(*x == *z);
     assert(*z == *x);
@@ -19,8 +17,5 @@ int main(){
 
     assert(x->size()==4);
 
-    delete x;
-    delete y;
-    delete z;
     cout<<"Int: OK!\n"<<endl;
 }

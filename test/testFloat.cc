@@ -2,10 +2,7 @@
 #include <cassert>
 const float a=2.3, b=-4.5;
 int main(){
-    Value *x, *y, *z;
-    x = new Float(a);
-    y = new Float(b);
-    z = new Float(a);
+    PValue x(new Float(a)), y(new Float(b)), z(new Float(a));
 
     assert(*x == *z);
     assert(*z == *x);
@@ -20,8 +17,5 @@ int main(){
 
     assert(x->size()==4);
 
-    delete x;
-    delete y;
-    delete z;
     cout<<"Float: OK!\n"<<endl;
 }

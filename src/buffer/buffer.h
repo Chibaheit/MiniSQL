@@ -4,6 +4,24 @@
 #include "../common.h"
 #include <unordered_map>
 
+//#define DEBUG_BUFFER
+#ifdef DEBUG_BUFFER
+    // debugging
+    #ifndef DEBUG
+        #define DEBUG
+        #undef debug
+        #define debug(args...) fprintf(stderr, args)
+    #endif
+#else
+    // debug finished
+    #ifdef DEBUG
+        #undef DEBUG
+        #undef debug
+        #define debug(args...)
+    #endif
+#endif
+
+
 // defaultNumBlocks: the number of blocks in buffer, at least 1
 // defaultBlockSize: the size of a single block, 4096 for production use
 extern int defaultNumBlocks, defaultBlockSize;
@@ -15,8 +33,10 @@ private:
     char *m_data;
     FILE *m_file;
     bool m_dirty, m_pinned, m_recent;
+    unsigned m_finger_print;
     bool writeBack() {
         if (m_dirty) {
+            debug("Block %p %u wrote back.", m_file, index());
             assert(fseek(m_file, m_offset, SEEK_SET)==0);
             fwrite(m_data, 1, m_size, m_file);
             m_dirty = 0;
@@ -25,17 +45,17 @@ private:
         return 0;
     }
     void open(FILE *file, unsigned offset, unsigned size);
-    Block(FILE *file, Size offset, Size size): m_dirty(0), m_file(0) {
+    Block(FILE *file, Size offset, Size size):
+        m_dirty(0), m_file(0), m_finger_print(0) {
         assert(file);
         debug("Opening file with offset %u size %u\n", offset, size);
         m_data = new char[size];
+        assert(m_data);
+        #ifdef DEBUG
+        memset(m_data, 'z', size);
+        strcpy(m_data, "Hello, World!");
+        #endif
         open(file, offset, size);
-    }
-    void setRecent(bool recent) {
-        m_recent = recent;
-    }
-    bool isRecent() const {
-        return m_recent;
     }
     friend Buffer;
 public:
@@ -60,18 +80,34 @@ public:
     void setDirty() {
         m_recent = m_dirty = true;
     }
+    void setRecent(bool recent = true) {
+        m_recent = recent;
+    }
+    bool isRecent() const {
+        return m_recent;
+    }
+    // get finger print of this block
+    // if this value changes, it means this block has alreay been reopened
+    unsigned getFingerPrint() const {
+        return m_finger_print;
+    }
     // get integer reference at pos
     // negative pos is allowed and treated as indexing from the end
     // Note this method set neither the m_recent nor m_dirty flag
     // set them manually calling setDirty()
     unsigned &operator[](int pos) {
-        unsigned offset = pos * sizeof(int);
-        return *(unsigned *)(m_data + (pos < 0 ? m_size - offset : offset));
+        char *addr = m_data + pos * sizeof(int);
+        if (pos < 0) addr += m_size;
+        assert(m_data <= addr);
+        assert(addr <= m_data + size() - sizeof(int));
+        return *(unsigned *)addr;
     }
     // automatic write back when destroyed
     ~Block() {
+        debug("Block %p %u deconstructing...\n", m_file, m_offset);
         writeBack();
         delete [] m_data;
+        debug("Block %p %u deconstructed.\n", m_file, m_offset);
     }
     void pin(bool pinned) {
         m_pinned = pinned;
@@ -98,7 +134,7 @@ private:
                          unsigned blockSize, bool pinned);
     Block *m_access(FILE *file, unsigned offset, bool pinned = false);
     void printOpenedBlocks() const {
-        #ifdef DEBUG
+        #ifdef DEBUG_OPENED_BLOCKLIST
         for (auto &u: m_dictionary) {
             debug("File %p:", u.first);
             for (auto &v: u.second) {
@@ -127,6 +163,13 @@ public:
     static FILE *getFile(const string &filePath);
     // flush all blocks to files
     static void flush();
+    // test whether filename exists as a file
+    static bool exists(const string &filename);
+    // truncate the file to numBlocks * defaultBlockSize number of bytes
+    // returns whether operation succeeded
+    static bool truncate(FILE *file, unsigned numBlocks);
+    // deletes a file, returns whether succeeded
+    static bool remove(const string &filename);
 };
 
 #endif

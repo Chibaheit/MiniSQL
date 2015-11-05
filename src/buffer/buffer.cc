@@ -1,5 +1,8 @@
 #include "buffer.h"
 #include <cassert>
+#include <unistd.h>
+#include <sys/types.h>
+#include <cstdio>
 
 Buffer::Buffer(unsigned size, unsigned block_size):
     m_size(size), m_block_size(block_size), m_now(0) {
@@ -47,7 +50,6 @@ unsigned Buffer::getNewBlock(FILE *file, unsigned offset,
 
 Block *Buffer::access(const string &filePath,
                       unsigned blockIndex, bool pinned) {
-    debug("Accessing \"%s\" %d\n", filePath.c_str(), blockIndex);
     FILE *fp = inst->getFileHandle(filePath);
     unsigned offset = blockIndex * inst->m_block_size;
     return inst->m_access(fp, offset, pinned);
@@ -63,7 +65,7 @@ FILE *Buffer::getFileHandle(const string &filePath) {
     FILE *fp = NULL;
     if (file == m_files.end()) {
         if ((fp = fopen(filePath.c_str(), "rb+")) == NULL) {
-            assert(fp = fopen(filePath.c_str(), "wb+"));
+            fp = fopen(filePath.c_str(), "wb+");
         }
         debug("File %s: %p\n", filePath.c_str(), fp);
         m_files[filePath] = fp;
@@ -78,6 +80,7 @@ FILE *Buffer::getFile(const string &filePath) {
 }
 
 Block *Buffer::m_access(FILE *fp, unsigned offset, bool pinned) {
+    debug("Accessing %p %u\n", fp, offset/m_block_size);
     auto &table = m_dictionary.find(fp)->second;
     auto entry = table.find(offset);
     if (entry == table.end()) {
@@ -95,6 +98,7 @@ Block *Buffer::m_access(FILE *fp, unsigned offset, bool pinned) {
     }
 
     Block *block = m_blocks[entry->second];
+    block->setRecent();
     block->pin(pinned);
 
     inst->printOpenedBlocks();
@@ -108,12 +112,14 @@ void Buffer::flush() {
 }
 
 Buffer::~Buffer() {
+    debug("Buffer deconstructing...\n");
     for (int i = 0; i < m_size; ++i)
         if (m_blocks[i]) delete m_blocks[i];
     delete [] m_blocks;
     for (auto &file: m_files) {
         fclose(file.second);
     }
+    debug("Buffer deconstructed.\n");
 }
 
 void Block::open(FILE *file, unsigned offset, unsigned size) {
@@ -127,6 +133,28 @@ void Block::open(FILE *file, unsigned offset, unsigned size) {
 	m_size = size;
 	m_recent = true;
 	m_dirty = m_pinned = false;
+    ++m_finger_print;
 	assert(fseek(file, offset, SEEK_SET)==0);
 	fread(m_data, 1, size, file);
+}
+
+// test whether filename exists as a file
+bool Buffer::exists(const string &filename) {
+    FILE *fp = fopen(filename.c_str(), "r");
+    if (fp) {
+        fclose(fp);
+        return true;
+    }
+    return false;
+}
+
+// truncate the file to numBlocks * defaultBlockSize number of bytes
+// returns whether operation succeeded
+bool Buffer::truncate(FILE *file, unsigned numBlocks) {
+    return ftruncate(fileno(file), numBlocks * defaultBlockSize) == 0;
+}
+
+// deletes a file, returns whether succeeded
+bool Buffer::remove(const string &filename) {
+    return remove(filename.c_str()) == 0;
 }
