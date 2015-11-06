@@ -12,7 +12,7 @@
 
   vector<string> getIndexList(string tableName, string attributeName);
 
-  vector<string> getAttributeType(string tableName);
+  vector<attributeType> getAttributeType(string tableName);
 ```
 
 ## API
