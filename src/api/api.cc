@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <string>
+#include <iomanip>
 
 #include "api.h"
 #include "../interpreter/param.h"
@@ -13,10 +14,9 @@ using namespace std;
 namespace API {
     void createTable(string instruction) {
         // create table tableName
-        cout << instruction << endl;
         auto args = PARAM::Split(instruction);
         if (args.size() < 5) {
-            cout << "Error: Not enough argument." << endl;
+            cout << "Error: Not enough argument" << endl;
             return;
         }
         string tableName;
@@ -28,9 +28,9 @@ namespace API {
         Catalog *testCatalog = &Catalog::getInstance();
         // checkTableExist before table created
         if (testCatalog->checkTableExist(tableName)) {
-          cout << ("Error: table " + tableName + " exists.") << endl;
+          cout << ("Error: table " + tableName + " exists") << endl;
           return;
-        } else cout << "table(" << tableName << ") does not exist" << endl;
+        }
         // creatTable
         vector<AttributeDetail> attributeList;
         for (size_t i = 3; i < args.size(); i += 2) {
@@ -79,9 +79,11 @@ namespace API {
                 attributeList.push_back(tmpAttribute);
             }
         }
+        /*
         for (auto u: attributeList) {
           cout << u.name << " " << u.type << " " << u.length << " " << u.unique << " " << u.primary << endl;
         }
+        */
         // call record -> createTable
         {
           Record record = Record(tableName);
@@ -114,17 +116,15 @@ namespace API {
         Catalog *testCatalog = &Catalog::getInstance();
         // checkTableExist before table created
         if (!testCatalog->checkTableExist(tableName)) {
-            cout << ("Error: table" + tableName + "dose not exist.") << endl;
+            cout << ("Error: table " + tableName + " dose not exist") << endl;
             return;
-        } else {
-            cout << "table(" << tableName << ") exists" << endl;
         }
         // call testCatalog -> dropTable
         {
             if (testCatalog->dropTable(tableName)) {
-                cout << "drop table successfully." << endl;
+                cout << "drop table successfully" << endl;
             } else {
-              cout << "fail to drop table." << endl;
+              cout << "fail to drop table" << endl;
             }
         }
         // call testRecord -> dropTable
@@ -138,7 +138,7 @@ namespace API {
         // create index indexName on tableName (attributeName)
         auto args = PARAM::Split(instruction);
         if (args.size() != 6) {
-            cout << "Error: Not enough argument." << endl;
+            cout << "Error: Not enough argument" << endl;
             return;
         }
         if (args[3] != "on") {
@@ -155,7 +155,7 @@ namespace API {
         Catalog *testCatalog = &Catalog::getInstance();
         // checkTableExist before table created
         if (!testCatalog->checkTableExist(tableName)) {
-            cout << ("Error: table" + tableName + "does not exist.") << endl;
+            cout << ("Error: table" + tableName + "does not exist") << endl;
             return;
         } else {
             cout << "table(" << tableName << ") exists" << endl;
@@ -164,15 +164,11 @@ namespace API {
         if (!testCatalog->checkAttributeExist(tableName, attributeName)) {
             cout << "attribute(attrA) does not exist" << endl;
             return;
-        } else {
-            cout << "attribute(attrA) exists" << endl;
         }
         // checkIndexExist
         if (testCatalog->checkIndexExist(tableName, indexName)) {
             cout << "indexA exists" << endl;
             return;
-        } else {
-            cout << "indexA does not exist" << endl;
         }
         if (testCatalog->createIndex(tableName, attributeName, indexName)) {
             cout << "create index(indexA) successfully" << endl;
@@ -210,7 +206,7 @@ namespace API {
             if (filterFlag) {
                 attributeName = PARAM::Name(args[5]);
                 val = args[7];
-                if (val[0] == '\'') {
+                if (val[0] == '\'' || val[0] == '\"') {
                     val = val.substr(1, val.length() - 2);
                 }
             }
@@ -219,16 +215,14 @@ namespace API {
         }
         Catalog *testCatalog = &Catalog::getInstance();
         if (!testCatalog->checkTableExist(tableName)) {
-            cout << ("Error: table" + tableName + "does not exist.") << endl;
+            cout << ("Error: table " + tableName + " does not exist") << endl;
             return;
-        } else {
-            cout << "table(" << tableName << ") exists" << endl;
         }
         vector<QueryDetail> queryList;
         if (filterFlag) {
             int attrPos;
             if ((attrPos = testCatalog->checkAttributeExist(tableName, attributeName)) == -1) {
-                cout << ("Error: the attribute" + attributeName + "does not exist.") << endl;
+                cout << ("Error: the attribute " + attributeName + " does not exist") << endl;
                 return;
             }
             vector<attributeType> attrType = testCatalog->getAttributeType(tableName, attributeName);
@@ -271,18 +265,40 @@ namespace API {
                 return;
             }
         }
+        /*
         for (auto u: queryList) {
             cout << u.type << " " << u.val.type << " " << u.val.value << " " << u.targetPosition << endl;
         }
+        */
         Table table;
         Record record(tableName);
         record.select(queryList, table);
-        cout << "Answer: " << endl;
-        cout << table.size() << endl;
-        for (Table::iterator tableItr = table.begin(); tableItr != table.end(); tableItr++) {
-            for (Tuple::iterator tupleItr = tableItr->begin(); tupleItr != tableItr->end(); tupleItr++)
-                cout << tupleItr->value << " ";
-            cout << endl;
+        if (table.size() == 0) {
+            cout << "No matching data" << endl;
+        } else {
+            cout << "Answer: " << endl;
+            vector<string>attrName = testCatalog->getAttributeName(tableName);
+            for (vector<string>::iterator u = attrName.begin(); u != attrName.end(); ++u) {
+                cout << setw(19) << setiosflags(ios::left) << *u;
+                if (u != attrName.end() - 1) {
+                    cout << "|";
+                } else {
+                    cout << endl;
+                }
+            }
+            for (int i = 0; i < attrName.size() * 20; ++i) {
+                printf("%c", "-\n"[i == attrName.size() * 20 - 1]);
+            }
+            for (Table::iterator tableItr = table.begin(); tableItr != table.end(); tableItr++) {
+                for (Tuple::iterator tupleItr = tableItr->begin(); tupleItr != tableItr->end(); tupleItr++) {
+                    cout << setw(19) << setiosflags(ios::left) << tupleItr->value;
+                    if (tupleItr != tableItr->end() - 1) {
+                        cout << "|";
+                    } else {
+                        cout << endl;
+                    }
+                }
+            }
         }
     }
 
@@ -302,7 +318,7 @@ namespace API {
         Catalog *testCatalog = &Catalog::getInstance();
         // checkTableExist before table created
         if (!testCatalog->checkTableExist(tableName)) {
-            cout << ("Error: table" + tableName + "does not exist.") << endl;
+            cout << ("Error: table " + tableName + " does not exist") << endl;
             return;
         }
         vector<attributeType> attrType = testCatalog->getAttributeType(tableName);
@@ -342,9 +358,11 @@ namespace API {
                 return;
             }
         }
+        /*
         for (auto u: tup) {
             cout << u.type << " " << u.value << endl;
         }
+        */
         {
             Record record = Record(tableName);
             if (record.insert(tup, pos)) {
@@ -357,13 +375,13 @@ namespace API {
 
     void deleteFrom(string instruction) {
         // delete from tableName || delete from tableName where
-        string tableName, attributeName = "";
+        string tableName, attributeName = "", val;
         auto args = PARAM::Split(instruction);
         bool filterFlag = false;
         if (args.size() == 7) {
             filterFlag = true;
         }
-        if ((args.size() != 3 && args.size() != 7) || (args.size() == 7 && (args[3] != "where" || args[5].length() == 1))) {
+        if ((args.size() != 3 && args.size() != 7) || (args.size() == 7 && args[3] != "where")) {
             cout << "Error: unknown SQL script" << endl;
             return;
         }
@@ -371,10 +389,73 @@ namespace API {
             tableName = PARAM::Name(args[2]);
             if (filterFlag) {
                 attributeName = PARAM::Name(args[4]);
+                val = args[6];
+                if (val[0] == '\'' || val[0] == '\"') {
+                    val = val.substr(1, val.length() - 2);
+                }
             }
         } catch (invalid_argument& e) {
             cout << "Syntax Error: " << e.what() << endl;
         }
+        Catalog *testCatalog = &Catalog::getInstance();
+        if (!testCatalog->checkTableExist(tableName)) {
+            cout << ("Error: table " + tableName + " does not exist") << endl;
+            return;
+        }
+        vector<QueryDetail> queryList;
+        if (filterFlag) {
+            int attrPos;
+            if ((attrPos = testCatalog->checkAttributeExist(tableName, attributeName)) == -1) {
+                cout << ("Error: the attribute " + attributeName + " does not exist") << endl;
+                return;
+            }
+            vector<attributeType> attrType = testCatalog->getAttributeType(tableName, attributeName);
+            ValueDetail value = ValueDetail(INTTYPE, val);
+            try {
+                switch (attrType[0]) {
+                    case INTTYPE:
+                        PARAM::Int(val);
+                        value.type = INTTYPE;
+                        break;
+                    case CHARTYPE:
+                        PARAM::Name(val);
+                        value.type = CHARTYPE;
+                        break;
+                    case FLOATTYPE:
+                        PARAM::Float(val);
+                        value.type = FLOATTYPE;
+                        break;
+                    default:
+                        break;
+                }
+            } catch (invalid_argument& e) {
+                cout << "Syntax Error: " << e.what() << endl;
+                return;
+            }
+            if (args[5] == "<") {
+                queryList.push_back(QueryDetail(LESS, value, attrPos));
+            } else if (args[5] == "<=") {
+                queryList.push_back(QueryDetail(LESSANDEQUAL, value, attrPos));
+            } else if (args[5] == "=") {
+                queryList.push_back(QueryDetail(EQUAL, value, attrPos));
+            } else if (args[5] == "!=") {
+                queryList.push_back(QueryDetail(NOTEQUAL, value, attrPos));
+            } else if (args[5] == ">") {
+                queryList.push_back(QueryDetail(MOREANDEQUAL, value, attrPos));
+            } else if (args[5] == ">=") {
+                queryList.push_back(QueryDetail(MORE, value, attrPos));
+            } else {
+                cout << "Unmatched symbol: " << args[5] << endl;
+                return;
+            }
+        }
+        /*
+        for (auto u: queryList) {
+            cout << u.type << " " << u.val.type << " " << u.val.value << " " << u.targetPosition << endl;
+        }
+        */
+        Record record(tableName);
+        cout << record.deleteTuple(queryList) << " records deleted" << endl;
     }
 
     void quit(string instruction) {
