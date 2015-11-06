@@ -36,13 +36,13 @@ void Record::loadStatusAndInfo() {
     numAttr = data[9];
     attrInfo = new AttrInfo[numAttr];
     for (int i = 0; i < numAttr; i++) {
-        char ch = data[8 + 2 * i];
+        char ch = data[10 + 2 * i];
         if (ch == 0)
             attrInfo[i].type = INTTYPE;
         else if (ch == 1)
             attrInfo[i].type = FLOATTYPE;
         else attrInfo[i].type = CHARTYPE;
-        attrInfo[i].size = data[9 + 2 * i];
+        attrInfo[i].size = data[11 + 2 * i];
     }
 }
 
