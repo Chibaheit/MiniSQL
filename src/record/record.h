@@ -23,7 +23,9 @@ class Record{
     public:
         attributeType type;
         int size;
-    }*attrInfo;
+        AttrInfo(attributeType type, int size): type(type), size(size) {}
+    };
+    vector<AttrInfo> attrInfo;
     
     void loadStatusAndInfo();
     void storeStatusAndInfo();
@@ -54,7 +56,8 @@ public:
     // return false if the operation is failed(same primary key or unique attribute as before)
     bool insert(Tuple &valueList, vector<int> primaryOrUniquePosition);
     // delete tuple with query detail
-    void deleteTuple(vector<QueryDetail> &queryList);
+    // return the number of the record deleted
+    int deleteTuple(vector<QueryDetail> &queryList);
     // select tuples with query detail
     // the result of selection is stored in table
     void select(vector<QueryDetail> &queryList, Table &table);

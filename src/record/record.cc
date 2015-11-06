@@ -12,10 +12,7 @@
 #include <sstream>
 
 Record::Record(string tableName) : tableName(tableName) {
-//    string fileName = tableName + ".record";
-//    if (access(fileName.c_str(), 0) != -1)
-        loadStatusAndInfo();
-//    else exist = false;
+    loadStatusAndInfo();
 }
 
 Record::~Record() {}
@@ -34,15 +31,18 @@ void Record::loadStatusAndInfo() {
     offset = data[5] * 256 + data[6];
     tupleSize = data[7] * 256 + data[8];
     numAttr = data[9];
-    attrInfo = new AttrInfo[numAttr];
+    attrInfo.clear();
+    attributeType type;
+    int size;
     for (int i = 0; i < numAttr; i++) {
         char ch = data[10 + 2 * i];
         if (ch == 0)
-            attrInfo[i].type = INTTYPE;
+            type = INTTYPE;
         else if (ch == 1)
-            attrInfo[i].type = FLOATTYPE;
-        else attrInfo[i].type = CHARTYPE;
-        attrInfo[i].size = data[11 + 2 * i];
+            type = FLOATTYPE;
+        else type = CHARTYPE;
+        size = data[11 + 2 * i];
+        attrInfo.push_back(AttrInfo(type, size));
     }
 }
 
@@ -277,11 +277,10 @@ bool Record::createTable(vector<attributeType> attrType, vector<int> attrSize) {
     blockIndex = 0;
     numAttr = attrType.size();
     offset = 10 + numAttr * 2;
-    attrInfo = new AttrInfo[numAttr];
     tupleSize = 1;
+    attrInfo.clear();
     for (int i = 0; i < numAttr; i++) {
-        attrInfo[i].type = attrType.at(i);
-        attrInfo[i].size = attrSize.at(i);
+        attrInfo.push_back(AttrInfo(attrType.at(i), attrSize.at(i)));
         tupleSize += attrSize.at(i);
     }
     offset = (offset / tupleSize + 1) * tupleSize;
@@ -325,7 +324,8 @@ bool Record::insert(Tuple &valueList, vector<int> primaryOrUniquePosition) {
     return true;
 }
 
-void Record::deleteTuple(vector<QueryDetail> &queryList) {
+int Record::deleteTuple(vector<QueryDetail> &queryList) {
+    int count = 0;
     dataBegin = 10 + numAttr * 2;
     dataBegin = (dataBegin / tupleSize + 1) * tupleSize;
     int curOffset = dataBegin;
@@ -346,8 +346,10 @@ void Record::deleteTuple(vector<QueryDetail> &queryList) {
             continue;
         if (!match(curTuple, queryList))
             continue;
+        count++;
         deleteTuple(tmpBlockIndex, tmpOffset);
     }
+    return count;
 }
 
 void Record::select(vector<QueryDetail> &queryList, Table &table) {
