@@ -1,22 +1,22 @@
 #include "common.h"
 
 ostream &operator<<(ostream &out, const Value &val){
-	val.print(out);
-	return out;
+    val.print(out);
+    return out;
 }
 
 Value::~Value(){}
 
 template <class T>
 bool SingleValue<T>::operator==(const Value &rhs) const {
-	auto r = dynamic_cast<const SingleValue<T>&>(rhs);
-	return data == r.data;
+    auto r = dynamic_cast<const SingleValue<T>&>(rhs);
+    return data == r.data;
 }
 
 template <class T>
 bool SingleValue<T>::operator<(const Value &rhs) const {
-	auto r = dynamic_cast<const SingleValue<T>&>(rhs);
-	return data < r.data;
+    auto r = dynamic_cast<const SingleValue<T>&>(rhs);
+    return data < r.data;
 }
 
 
@@ -32,7 +32,7 @@ void SingleValue<T>::memoryCopy(void *dest) const {
 
 template <class T>
 void SingleValue<T>::print(ostream &out) const {
-	out << data;
+    out << data;
 }
 
 template <class T>

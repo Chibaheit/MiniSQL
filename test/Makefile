@@ -3,7 +3,7 @@ COMMON_OBJS := ../src/common.o
 CC := g++
 COP := -std=c++11 -g -Ofast
 
-TARGET := testNode.run testInt.run testFloat.run testString.run testBuffer.run testIndex1.run testIndex2.run testCatalog.run testRecord.run
+TARGET := testInt.run testFloat.run testString.run testBuffer.run testNode.run testIndex1.run testIndex2.run testCatalog.run testRecord.run
 
 .PHONY: all
 .PHONY: %.run
@@ -76,7 +76,7 @@ testRecord.run: testRecord.exe
 	./$<
 	rm -f *.record
 
-%.run: 
+%.run: %.exe
 	./$<
 
 clean_o: *.o
@@ -85,7 +85,7 @@ clean_o: *.o
 clean_tmp:
 	rm -f *~ *.swp *.output
 
-clean_exe: 
+clean_exe:
 	rm -f *.out *.exe
 
 clean: clean_tmp clean_o clean_exe
