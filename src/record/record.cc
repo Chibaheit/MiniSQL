@@ -361,10 +361,10 @@ void Record::select(vector<QueryDetail> &queryList, Table &table) {
             curBlockIndex++;
             curOffset = 0;
         }
-        else curOffset += tupleSize;
+        //else curOffset += tupleSize;
         if (curBlockIndex > blockIndex)
             break;
-        else if (curBlockIndex == blockIndex && curOffset >= offset)
+        else if (curBlockIndex == blockIndex && curOffset > offset)
             break;
         Tuple curTuple;
         if (!loadTuple(curTuple, curBlockIndex, curOffset))
