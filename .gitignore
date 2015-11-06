@@ -24,3 +24,9 @@ log
 
 # Mac OS files
 .DS_Store
+
+# Catalog
+*.catalog
+
+# record
+*.record
