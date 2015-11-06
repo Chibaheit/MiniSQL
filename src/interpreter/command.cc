@@ -16,7 +16,7 @@ namespace COMMAND {
             } else if (arg.substr(argLength - 4, argLength) == ".sql") {
                 args.insert(std::make_pair("file", arg));
             } else {
-                cout << "Error: Invaild file type." << endl;
+                std::cout << "Error: Invaild file type." << std::endl;
                 exit(1);
             }
         }
