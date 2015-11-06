@@ -77,10 +77,14 @@ namespace PARAM {
         size_t length = s.length();
         try {
             pos = s.find('('); rPos = rS.find(')');
-            s[pos] = ' '; s[length - 1 - rPos] = ' ';
-
-            if ((pos != string::npos && rPos == string::npos) || (pos == string::npos && rPos != string::npos) || (pos + rPos > length - 1)) {
+            if (!(pos == string::npos && rPos == string::npos) && ((pos != string::npos && rPos == string::npos) || (pos == string::npos && rPos != string::npos) || (pos + rPos > length - 1))) {
                 throw invalid_argument("unmatched bracket.");
+            }
+            if (pos != string::npos) {
+                s[pos] = ' ';
+            }
+            if (rPos != string::npos) {
+                s[length - 1 - rPos] = ' ';
             }
         } catch (invalid_argument& e) {
             cout << "Syntax Error: " << e.what() << endl;
