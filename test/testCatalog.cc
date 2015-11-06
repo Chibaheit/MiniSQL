@@ -1,5 +1,7 @@
-#include "../catalog/catalog.hpp"
-#include "../buffer/buffer.h"
+#include "../src/catalog/catalog.h"
+#include "../src/buffer/buffer.h"
+
+int defaultNumBlocks = 2, defaultBlockSize = 4096;
 
 int main() {
     Catalog *testCatlog = &Catalog::getInstance();

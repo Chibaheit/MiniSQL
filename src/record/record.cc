@@ -6,7 +6,7 @@
 //  Copyright © 2015年 scn3. All rights reserved.
 //
 
-#include "../record.hpp"
+#include "record.h"
 #include "../buffer/buffer.h"
 #include <string.h>
 #include <sstream>

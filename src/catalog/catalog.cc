@@ -6,7 +6,7 @@
 //  Copyright © 2015年 scn3. All rights reserved.
 //
 
-#include "catalog.hpp"
+#include "catalog.h"
 #include "../buffer/buffer.h"
 
 bool Catalog::loadSchema(string tableName) {

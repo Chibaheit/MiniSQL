@@ -1,5 +1,7 @@
-#include "../src/record/record.hpp"
+#include "../src/record/record.h"
 #include "../src/buffer/buffer.h"
+
+int defaultNumBlocks = 2, defaultBlockSize = 4096;
 
 int main() {
     Record testRecord1("tableA");

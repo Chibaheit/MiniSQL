@@ -3,7 +3,7 @@ COMMON_OBJS :=
 CC := g++
 COP := -std=c++11 -g -Ofast
 
-TARGET := common.o buffer/buffer.o index/index.o
+TARGET := common.o buffer/buffer.o index/index.o catalog/catalog.o record/record.o
 
 all: $(TARGET)
 

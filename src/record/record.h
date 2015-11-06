@@ -9,7 +9,7 @@
 #ifndef record_hpp
 #define record_hpp
 
-#include "common.h"
+#include "../common.h"
 
 class Record{
     string tableName;
