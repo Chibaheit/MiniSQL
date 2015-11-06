@@ -297,6 +297,7 @@ vector<attributeType> Catalog::getAttributeType(string tableName, string queryNa
     }
     return res;
 }
+
 vector<int> Catalog::getPrimaryOrUniquePosition(string tableName) {
     vector<int> res;
     loadSchema(tableName);
@@ -304,6 +305,15 @@ vector<int> Catalog::getPrimaryOrUniquePosition(string tableName) {
       if (itr->unique || itr->primary) {
           res.push_back(itr - schema.attrDetailList.begin());
       }
+    }
+    return res;
+}
+
+vector<string> Catalog::getAttributeName(string tableName) {
+    vector<string> res;
+    loadSchema(tableName);
+    for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++) {
+      res.push_back(itr->attrName);
     }
     return res;
 }
