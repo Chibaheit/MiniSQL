@@ -3,7 +3,8 @@ COMMON_OBJS := ../src/common.o
 CC := g++
 COP := -std=c++11 -g -Ofast
 
-TARGET := testNode.run testInt.run testFloat.run testString.run testBuffer.run testIndex1.run testIndex2.run
+TARGET := testNode.run testInt.run testFloat.run testString.run testBuffer.run testIndex1.run testIndex2.run /
+	testCatalog.run testRecord.run
 
 .PHONY: all
 .PHONY: %.run
@@ -23,6 +24,18 @@ INDEX_HEADER := $(INDEX_PATH)/index.h
 testIndex%.o: testIndex%.cc $(COMMON_HEADERS) $(BUFFER_HEADER) $(INDEX_HEADER)
 	$(CC) $(COP) -c $< -o $@
 
+CATALOG_PATH := ../src/catalog
+CATALOG_OBJ := $(CATALOG_PATH)/catalog.o
+CATALOG_HEADER := $(CATALOG_PATH)/catalog.hpp
+testCatalog.o: testCatalog.cpp $(COMMON_HEADERS) $(BUFFER_HEADER) $(CATALOG_HEADER)
+	$(CC) $(COP) -c $< -o $@
+
+RECORD_PATH := ../src/record
+RECORD_OBJ := $(RECORD_PATH)/record.o
+RECORD_HEADER := $(RECORD_PATH)/record.hpp
+testRecord.o: testRecord.cpp $(COMMON_HEADERS) $(BUFFER_HEADER) $(RECORD_HEADER)
+	$(CC) $(COP) -c $< -o $@	
+
 %.o: %.cc $(COMMON_HEADERS)
 	$(CC) $(COP) -c $< -o $@
 
@@ -34,6 +47,12 @@ testBuffer.exe: testBuffer.o $(BUFFER_OBJ)
 
 testNode.exe: testNode.o $(INDEX_OBJ) $(BUFFER_OBJ)
 	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(INDEX_OBJ) -o $@
+
+testCatalog.exe: testCatalog.o $(INDEX_OBJ) $(CATALOG_OBJ)
+	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(CATALOG_OBJ) -o $@
+
+testRecord.exe: testRecord.o $(INDEX_OBJ) $(RECORD_OBJ)
+	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(RECORD_OBJ) -o $@
 
 %.exe: %.o
 	$(CC) $(COP) $< $(COMMON_OBJS) -o $@
