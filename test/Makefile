@@ -3,7 +3,7 @@ COMMON_OBJS := ../src/common.o
 CC := clang++
 COP := -std=c++11
 
-TARGET := test
+TARGET := test.exe
 .PHONY: all
 .PHONY: %.run
 all: $(TARGET)
