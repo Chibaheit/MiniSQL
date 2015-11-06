@@ -90,7 +90,7 @@ testRecord.run: testRecord.exe
 	./$<
 	rm -f *.record
 
-%.run:
+%.run: %.exe
 	./$<
 
 clean_o: *.o

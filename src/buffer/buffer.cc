@@ -128,14 +128,15 @@ void Block::open(FILE *file, unsigned offset, unsigned size) {
         debug("%p %u\n", m_file, m_offset);
         assert(Buffer::inst->m_dictionary[m_file].erase(m_offset));
     }
-	m_file = file;
-	m_offset = offset;
-	m_size = size;
-	m_recent = true;
-	m_dirty = m_pinned = false;
+    m_file = file;
+    m_offset = offset;
+    m_size = size;
+    m_recent = true;
+    m_dirty = m_pinned = false;
     ++m_finger_print;
-	assert(fseek(file, offset, SEEK_SET)==0);
-	fread(m_data, 1, size, file);
+    assert(fseek(file, offset, SEEK_SET)==0);
+    unsigned i = fread(m_data, 1, size, file);
+    memset(m_data + i, 0, size - i);
 }
 
 // test whether filename exists as a file

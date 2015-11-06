@@ -59,8 +59,8 @@ public:
     virtual bool operator==(const Value &rhs) const=0;
     virtual bool operator<(const Value &rhs) const=0;
     virtual void memoryCopy(void *dest) const=0;
-	virtual Size size() const=0;
-	virtual void print(ostream &out) const=0;
+    virtual Size size() const=0;
+    virtual void print(ostream &out) const=0;
 };
 
 ostream &operator<<(ostream &out, const Value &val);
@@ -68,16 +68,16 @@ ostream &operator<<(ostream &out, const Value &val);
 template<class T>
 class SingleValue: public Value {
 private:
-	T data;
+    T data;
 public:
-	SingleValue(T x): data(x) {};
+    SingleValue(T x): data(x) {};
     SingleValue(const char *mem): data(*(const T*)mem) {};
-	virtual ~SingleValue();
-	virtual bool operator==(const Value &rhs) const;
-	virtual bool operator<(const Value &rhs) const;
-	virtual Size size() const;
+    virtual ~SingleValue();
+    virtual bool operator==(const Value &rhs) const;
+    virtual bool operator<(const Value &rhs) const;
+    virtual Size size() const;
     virtual void memoryCopy(void *dest) const;
-	virtual void print(ostream &out) const;
+    virtual void print(ostream &out) const;
     virtual T getData() const {return data;}
 };
 typedef SingleValue<int> Int;
@@ -93,7 +93,7 @@ void String::memoryCopy(void *dest) const;
 
 template<>
 inline String::SingleValue(const char *mem){
-	data = mem;
+    data = mem;
 }
 
 class Type {

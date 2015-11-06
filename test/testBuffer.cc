@@ -47,6 +47,7 @@ int main() {
         const char *p = block->constData();
         assert(p[i]==i+'0');
     }
+    assert(Buffer::access(s[0], NUM)->constData()[0]==0);
     Buffer::flush();
     printf("Buffer: OK!\n\n");
 }
