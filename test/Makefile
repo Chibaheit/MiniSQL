@@ -93,7 +93,7 @@ testRecord.run: testRecord.exe
 %.run: %.exe
 	./$<
 
-clean_o: *.o
+clean_o:
 	rm -f *.o
 
 clean_tmp:

@@ -118,6 +118,8 @@ public:
     vector<attributeType> getAttributeType(string tableName, string queryName = "");
     // return primary or unique position
     vector<int> getPrimaryOrUniquePosition(string tableName);
+    // return attribute named
+    vector<string> getAttributeName(string tableName);
 };
 
 #endif /* catalog_hpp */
