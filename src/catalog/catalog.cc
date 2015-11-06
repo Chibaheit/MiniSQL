@@ -230,7 +230,7 @@ bool Catalog::createTable(string tableName, vector<AttributeDetail> &attributeLi
 bool Catalog::createIndex(string tableName, string attributeName, string indexName) {
     if (!loadSchema(tableName))
         return false;
-    if (!checkAttributeExist(tableName, attributeName))
+    if (checkAttributeExist(tableName, attributeName) == -1)
         return false;
     if (checkIndexExist(tableName, indexName))
         return false;
