@@ -1,7 +1,7 @@
 #include "../src/catalog/catalog.h"
 #include "../src/buffer/buffer.h"
 
-int defaultNumBlocks = 2, defaultBlockSize = 4096;
+int defaultNumBlocks = 10, defaultBlockSize = 4096;
 
 int main() {
     Catalog *testCatlog = &Catalog::getInstance();
@@ -38,7 +38,7 @@ int main() {
     if (testCatlog->checkTableExist(tableName2))  // check whether tableB exists
         cout << "table(" <<tableName2 << ") exists" << endl;
     else cout << "table(" << tableName2 << ") does not exist" << endl;
-    
+
     // checkAttributeExist
     if (testCatlog->checkAttributeExist(tableName1, "attrA"))  // check a existent attribute
         cout << "attribute(attrA) exists" << endl;
@@ -46,7 +46,7 @@ int main() {
     if (testCatlog->checkAttributeExist(tableName1, "attrD"))  // check a nonexistent attribute
         cout << "attribute(attrD) exists" << endl;
     else cout << "attribute(attrD) does not exist" << endl;
-    
+
     // createIndex
     if (testCatlog->createIndex(tableName1, "attrA", "indexA"))
         cout << "create index(indexA) successfully" << endl;
@@ -85,6 +85,7 @@ int main() {
             cout << *itr << " ";
         cout << endl;
     }
+    indexList.clear();
     if (!testCatlog->getIndexList("tableD", "attrA", indexList))
         cout << "fail to getIndexList" << endl;
     else {
@@ -93,7 +94,7 @@ int main() {
             cout << *itr << " ";
         cout << endl;
     }
-    
+
     // dropIndex
     if (testCatlog->dropIndex("tableD", "indexA"))
          cout << "drop index successfully" << endl;
@@ -112,7 +113,10 @@ int main() {
     if (testCatlog->dropTable("tableA"))
         cout << "drop table successfully" << endl;
     else cout << "fail to drop table" << endl;
-    
+//
     Buffer::flush();
+    
+    cout << "Catalog: OK!" << endl << endl;
+    
     return 0;
 }
