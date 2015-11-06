@@ -3,7 +3,6 @@
 #include <string>
 
 #include "command.h"
-#include "exception.h"
 
 namespace COMMAND {
     std::unordered_map<std::string, std::string> analyse(int argc, const char* argv[]) {
@@ -17,8 +16,8 @@ namespace COMMAND {
             } else if (arg.substr(argLength - 4, argLength) == ".sql") {
                 args.insert(std::make_pair("file", arg));
             } else {
-                Exception e = Exception("Error: Invaild file type.");
-                e.throwError();
+                cout << "Error: Invaild file type." << endl;
+                exit(1);
             }
         }
         return args;
