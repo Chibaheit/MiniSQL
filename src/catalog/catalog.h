@@ -50,7 +50,13 @@ private:
     void save(string str, int &blockIndex, int &offset);
 
     void save(char ch, int &blockIndex, int &offset);
+    
+    void save2(string str, int &blockIndex, int &offset);
+    
+    void save2(char ch, int &blockIndex, int &offset);
 
+    string loadStr(int &blockIndex, int &offset);
+    
     void clearSchema();
 
     Catalog() {clearSchema(); }
@@ -72,6 +78,10 @@ public:
     // check whether a attribute(attributeName) on the table(tableName) exists
     // return true if existing
     int checkAttributeExist(string tableName, string attributeName);
+    // check whether a index(indexName) exists
+    // return true if existing
+    // return false if not existing
+    bool checkIndexExist(string indexName);
     // check whether a index(indexName) on the table(tableName) exists
     // return true if existing
     // return false in the following 2 cases:
@@ -110,6 +120,10 @@ public:
      // 1.the table(tableName) is nonexistent
      // 2.there is not a index named indexName on table(tableName)
     bool dropIndex(string tableName, string indexName);
+    // update the schema according to : delete a index(indexName)
+    // return true if the operation is successful
+    // return false if there is not a index named indexName on table(tableName)
+    bool dropIndex(string indexName);
     // return the size of the attribute(attributeName) on the table(tableName)
     int getAttributeSize(string tableName, string attributeName);
     // return the total sizes of all the attribute on the table(tableName)
@@ -118,8 +132,6 @@ public:
     vector<attributeType> getAttributeType(string tableName, string queryName = "");
     // return primary or unique position
     vector<int> getPrimaryOrUniquePosition(string tableName);
-    // return attribute named
-    vector<string> getAttributeName(string tableName);
 };
 
 #endif /* catalog_hpp */
