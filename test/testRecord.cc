@@ -65,5 +65,7 @@ int main() {
     
     // drop table
     testRecord1.dropTable();
+    
+    cout << "Record: OK!" << endl << endl;
     return 0;
 }

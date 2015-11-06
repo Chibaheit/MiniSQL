@@ -1,0 +1,41 @@
+COMMON_HEADERS := ../src/common.h
+COMMON_OBJS := ../src/common.o
+CC := g++
+COP := -std=c++11 -g -Ofast
+
+TARGET := testCatalog.run testRecord.run
+
+.PHONY: all
+.PHONY: %.run
+all: $(TARGET)
+
+BUFFER_PATH := ../src/buffer
+BUFFER_OBJ := $(BUFFER_PATH)/buffer.o
+BUFFER_HEADER := $(BUFFER_PATH)/buffer.h
+
+CATALOG_PATH := ../src/catalog
+CATALOG_OBJ := $(CATALOG_PATH)/catalog.o
+CATALOG_HEADER := $(CATALOG_PATH)/catalog.h
+testCatalog.o: testCatalog.cc $(COMMON_HEADERS) $(BUFFER_HEADER) $(CATALOG_HEADER)
+	$(CC) $(COP) -c $< -o $@
+
+RECORD_PATH := ../src/record
+RECORD_OBJ := $(RECORD_PATH)/record.o
+RECORD_HEADER := $(RECORD_PATH)/record.h
+testRecord.o: testRecord.cc $(COMMON_HEADERS) $(BUFFER_HEADER) $(RECORD_HEADER)
+	$(CC) $(COP) -c $< -o $@	
+
+testCatalog.exe: testCatalog.o $(INDEX_OBJ) $(CATALOG_OBJ)
+	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(CATALOG_OBJ) -o $@
+
+testRecord.exe: testRecord.o $(INDEX_OBJ) $(RECORD_OBJ)
+	$(CC) $(COP) $< $(COMMON_OBJS) $(BUFFER_OBJ) $(RECORD_OBJ) -o $@
+
+
+testCatalog.run: testCatalog.exe
+	./$<
+	rm -f *.catalog
+
+testRecord.run: testRecord.exe
+	./$<
+	rm -f *.record

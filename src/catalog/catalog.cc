@@ -12,18 +12,17 @@
 bool Catalog::loadSchema(string tableName) {
     if (schema.tableName == tableName)
         return true;
+    else clearSchema();
     
     string fileName = tableName + ".catalog";
-//    if (Buffer::exists(fileName))
-//        return false;
-//    if (access(fileName.c_str(), 0) == -1)
-//        return false;
+    //    if (Buffer::exists(fileName))
+    //        return false;
+    //    if (access(fileName.c_str(), 0) == -1)
+    //        return false;
     Block *block = Buffer::access(fileName, 0);
     const char *data = block->constData();
     if (data[0] == 0)
         return false;
-    
-    clearSchema();
     schema.tableName = tableName;
     string str = "";
     infoType curInfoType = ATTRNAME;
@@ -42,40 +41,40 @@ bool Catalog::loadSchema(string tableName) {
             char ch = data[i];
             if (ch == 0) {
                 if (++zeroCount == 1)
-                switch (curInfoType) {
-                    case ATTRNAME: {
-                        curAttr = new AttrDetail;
-                        curAttr->attrName = str;
-                        break;
+                    switch (curInfoType) {
+                        case ATTRNAME: {
+                            curAttr = new AttrDetail;
+                            curAttr->attrName = str;
+                            break;
+                        }
+                        case ATTRTYPE: {
+                            if (str == "0")
+                                curAttr->attrType = INTTYPE;
+                            else if (str == "1")
+                                curAttr->attrType = CHARTYPE;
+                            else if (str == "2")
+                                curAttr->attrType = FLOATTYPE;
+                            else return false;
+                            break;
+                        }
+                        case ATTRLEN: {
+                            curAttr->length = str.at(0);
+                            break;
+                        }
+                        case ATTRUNIQUE: {
+                            curAttr->unique = str == "1";
+                            break;
+                        }
+                        case ATTRPRIMARY: {
+                            curAttr->primary = str == "1";
+                            break;
+                        }
+                        case INDEXNAME: {
+                            curAttr->indexList.push_back(str);
+                        }
+                        default:
+                            break;
                     }
-                    case ATTRTYPE: {
-                        if (str == "0")
-                            curAttr->attrType = INTTYPE;
-                        else if (str == "1")
-                            curAttr->attrType = CHARTYPE;
-                        else if (str == "2")
-                            curAttr->attrType = FLOATTYPE;
-                        else return false;
-                        break;
-                    }
-                    case ATTRLEN: {
-                        curAttr->length = str.at(0);
-                        break;
-                    }
-                    case ATTRUNIQUE: {
-                        curAttr->unique = str == "1";
-                        break;
-                    }
-                    case ATTRPRIMARY: {
-                        curAttr->primary = str == "1";
-                        break;
-                    }
-                    case INDEXNAME: {
-                        curAttr->indexList.push_back(str);
-                    }
-                    default:
-                        break;
-                }
                 if (zeroCount > 2) {
                     schema.attrDetailList.push_back(*curAttr);
                     return true;
@@ -133,6 +132,10 @@ bool Catalog::storeSchema() {
             save('1', blockIndex, offset);
         else save('0', blockIndex, offset);
         save('\0', blockIndex, offset);
+        for (strings::iterator itr2 = itr->indexList.begin(); itr2 != itr->indexList.end(); itr2++) {
+            save(*itr2, blockIndex, offset);
+            save('\0', blockIndex, offset);
+        }
         save('\0', blockIndex, offset);
     }
     save('\0', blockIndex, offset);
@@ -193,6 +196,7 @@ bool Catalog::checkIndexExist(string tableName, string indexName) {
 
 bool Catalog::getIndexList(string tableName, string attributeName, Strings indexList) {
     indexList.clear();
+    clearSchema();
     if (!loadSchema(tableName))
         return false;
     for (vector<AttrDetail>::iterator aitr = schema.attrDetailList.begin(); aitr != schema.attrDetailList.end(); aitr++)
