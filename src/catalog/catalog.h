@@ -40,38 +40,38 @@ private:
         vector<AttrDetail> attrDetailList;
     };
     typedef int infoType;
-    
+
     Schema schema;
-    
+
     bool loadSchema(string tableName);
-    
+
     bool storeSchema();
-    
+
     void save(string str, int &blockIndex, int &offset);
-    
+
     void save(char ch, int &blockIndex, int &offset);
-    
+
     void clearSchema();
-    
+
     Catalog() {clearSchema(); }
-    
+
     ~Catalog() {clearSchema(); }
-    
+
     Catalog(const Catalog &);
-    
+
     Catalog &operator=(const Catalog &);
 public:
     static Catalog &getInstance() {
         static Catalog instance;
         return instance;
     }
-    
+
     // check whether a table(tableName) exists
     // return true if existing
     bool checkTableExist(string tableName);
     // check whether a attribute(attributeName) on the table(tableName) exists
     // return true if existing
-    bool checkAttributeExist(string tableName, string attributeName);
+    int checkAttributeExist(string tableName, string attributeName);
     // check whether a index(indexName) on the table(tableName) exists
     // return true if existing
     // return false in the following 2 cases:
@@ -114,6 +114,10 @@ public:
     int getAttributeSize(string tableName, string attributeName);
     // return the total sizes of all the attribute on the table(tableName)
     int getAttributesTotalSize(string tableName);
+    // return type list of table
+    vector<attributeType> getAttributeType(string tableName, string queryName = "");
+    // return primary or unique position
+    vector<int> getPrimaryOrUniquePosition(string tableName);
 };
 
 #endif /* catalog_hpp */

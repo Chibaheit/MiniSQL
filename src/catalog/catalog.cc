@@ -12,7 +12,7 @@
 bool Catalog::loadSchema(string tableName) {
     if (schema.tableName == tableName)
         return true;
-    
+
     string fileName = tableName + ".catalog";
 //    if (Buffer::exists(fileName))
 //        return false;
@@ -22,14 +22,14 @@ bool Catalog::loadSchema(string tableName) {
     const char *data = block->constData();
     if (data[0] == 0)
         return false;
-    
+
     clearSchema();
     schema.tableName = tableName;
     string str = "";
     infoType curInfoType = ATTRNAME;
     AttrDetail *curAttr;
     int zeroCount = 0;  // 连续的0的个数，一个0表示字符串结束，两个0表示attr结束（包括其index），三个0表示table结束；
-    
+
     int blockIndex = 0;
     int fromOffset;
     while (true) {
@@ -96,21 +96,21 @@ bool Catalog::loadSchema(string tableName) {
             }
         }
     }
-    
+
     return true;
 }
 
 bool Catalog::storeSchema() {
     if (schema.tableName.empty())
         return false;
-    
+
     string fileName = schema.tableName + ".catalog";
     int blockIndex = 0;
     int offset = 1;
     Block *block = Buffer::access(fileName, 0);
     char *data = block->data();
     data[0] = 1;
-    
+
     for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++) {
         save(itr->attrName, blockIndex, offset);
         save('\0', blockIndex, offset);
@@ -168,14 +168,14 @@ bool Catalog::checkTableExist(string tableName) {
     return loadSchema(tableName);
 }
 
-bool Catalog::checkAttributeExist(string tableName, string attributeName) {
+int Catalog::checkAttributeExist(string tableName, string attributeName) {
     if (!loadSchema(tableName))
-        return false;
+        return -1;
     for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++) {
         if (itr->attrName == attributeName)
-            return true;
+            return itr - schema.attrDetailList.begin();
     }
-    return false;
+    return -1;
 }
 
 bool Catalog::checkIndexExist(string tableName, string indexName) {
@@ -279,4 +279,27 @@ int Catalog::getAttributesTotalSize(string tableName) {
     for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++)
         sum += itr->length;
     return sum;
+}
+
+vector<attributeType> Catalog::getAttributeType(string tableName, string queryName) {
+    vector<attributeType> res;
+    loadSchema(tableName);
+    for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++) {
+        if (queryName == "") {
+            res.push_back(itr->attrType);
+        } else if (itr->attrName == queryName) {
+            res.push_back(itr->attrType);
+        }
+    }
+    return res;
+}
+vector<int> Catalog::getPrimaryOrUniquePosition(string tableName) {
+    vector<int> res;
+    loadSchema(tableName);
+    for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++) {
+      if (itr->unique || itr->primary) {
+          res.push_back(itr - schema.attrDetailList.begin());
+      }
+    }
+    return res;
 }
