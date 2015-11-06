@@ -337,7 +337,7 @@ int Record::deleteTuple(vector<QueryDetail> &queryList) {
         }
         if (curBlockIndex > blockIndex)
             break;
-        else if (curBlockIndex == blockIndex && curOffset >= offset)
+        else if (curBlockIndex == blockIndex && curOffset > offset)
             break;
         Tuple curTuple;
         int tmpBlockIndex = curBlockIndex;
