@@ -143,6 +143,7 @@ namespace API {
         }
         if (args[3] != "on") {
             cout << "Syntax Error: Unknown SQL script" << endl;
+            return;
         }
         string tableName, indexName, attributeName;
         try {
@@ -155,25 +156,24 @@ namespace API {
         Catalog *testCatalog = &Catalog::getInstance();
         // checkTableExist before table created
         if (!testCatalog->checkTableExist(tableName)) {
-            cout << ("Error: table" + tableName + "does not exist") << endl;
+            cout << ("Error: table " + tableName + " does not exist") << endl;
             return;
-        } else {
-            cout << "table(" << tableName << ") exists" << endl;
         }
         // check a existent attribute
-        if (!testCatalog->checkAttributeExist(tableName, attributeName)) {
-            cout << "attribute(attrA) does not exist" << endl;
+        cout << tableName << " " << attributeName << endl;
+        if (testCatalog->checkAttributeExist(tableName, attributeName) == -1) {
+            cout << ("Error: attribute " + attributeName + " does not exist") << endl;
             return;
         }
         // checkIndexExist
-        if (testCatalog->checkIndexExist(tableName, indexName)) {
-            cout << "indexA exists" << endl;
+        if (testCatalog->checkIndexExist(indexName)) {
+            cout << ("Error: index " + indexName + " exists") << endl;
             return;
         }
         if (testCatalog->createIndex(tableName, attributeName, indexName)) {
-            cout << "create index(indexA) successfully" << endl;
+            cout << "create index(" + indexName + ") successfully" << endl;
         } else {
-            cout << "fail to create index(indexA)" << endl;
+            cout << "fail to create index(" + indexName + ")" << endl;
         }
     }
 
@@ -183,9 +183,20 @@ namespace API {
         // cout << indexName << endl;
         try {
             indexName = PARAM::Name(indexName);
-            //TODO: check index exist
         } catch (invalid_argument& e) {
             cout << "Syntax Error: " << e.what() << endl;
+        }
+        string tableName = "student";
+        Catalog *testCatalog = &Catalog::getInstance();
+        // checkTableExist before table created
+        if (!testCatalog->checkTableExist(tableName)) {
+            cout << ("Error: table " + tableName + " does not exist") << endl;
+            return;
+        }
+        if (testCatalog->dropIndex(indexName)) {
+            cout << "drop index(" + indexName + ") successfully" << endl;
+        } else {
+            cout << "fail to drop index(" + indexName + ")" << endl;
         }
     }
 
