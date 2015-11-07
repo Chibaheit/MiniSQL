@@ -410,9 +410,9 @@ bool Catalog::dropIndex(string indexName) {
         string iName = loadStr(curBlockIndex, curOffset);
         string tName = loadStr(curBlockIndex, curOffset);
         if (iName == indexName && valid)
-            dropIndex(tName, indexName);
+            return dropIndex(tName, indexName);
     }
-    return storeSchema();
+    return false;
 }
 
 int Catalog::getAttributeSize(string tableName, string attributeName) {
