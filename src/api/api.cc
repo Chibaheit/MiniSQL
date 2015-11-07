@@ -51,10 +51,11 @@ namespace API {
                     continue;
                 }
             }
+            AttributeDetail tmpAttribute(name, INTTYPE, 4);
             if (args[i + 1].find("int") == 0) {
-                attributeList.push_back(AttributeDetail(name, INTTYPE, 4));
+                tmpAttribute.type = INTTYPE;
             } else if (args[i + 1].find("float") == 0) {
-                attributeList.push_back(AttributeDetail(name, FLOATTYPE, 4));
+                tmpAttribute.type = FLOATTYPE;
             } else if (args[i + 1].find("char") == 0 && args[i + 1][4] == '(' && (args[i + 1][args[i + 1].length() - 1] == ')' || args[i + 1][args[i + 1].length() - 2] == ')')) {
                 int edPos = args[i + 1].length() - 1;
                 if (args[i + 1][args[i + 1].length() - 1] != ')') {
@@ -65,19 +66,21 @@ namespace API {
                     charSize = PARAM::Int(args[i + 1].substr(5, edPos - 5));
                 } catch (invalid_argument& e) {
                     cout << "Syntax Error: " << e.what() << endl;
+                    return;
                 }
-                AttributeDetail tmpAttribute(name, CHARTYPE, charSize);
-                if (i + 2 != args.size() && args[i + 1][args[i + 1].length() - 1] != ',') {
-                    if (args[i + 2].find("unique") == 0) {
-                        tmpAttribute.unique = true;
-                        i += 1;
-                    } else {
-                      cout << ("Unknown argument: " + args[i + 2]) << endl;
-                      return;
-                    }
-                }
-                attributeList.push_back(tmpAttribute);
+                tmpAttribute.type = CHARTYPE;
+                tmpAttribute.length = charSize;
             }
+            if (i + 2 != args.size() && args[i + 1][args[i + 1].length() - 1] != ',') {
+                if (args[i + 2].find("unique") == 0) {
+                    tmpAttribute.unique = true;
+                    i += 1;
+                } else {
+                  cout << ("Unknown argument: " + args[i + 2]) << endl;
+                  return;
+                }
+            }
+            attributeList.push_back(tmpAttribute);
         }
         /*
         for (auto u: attributeList) {
@@ -245,7 +248,6 @@ namespace API {
                         value.type = INTTYPE;
                         break;
                     case CHARTYPE:
-                        PARAM::Name(val);
                         value.type = CHARTYPE;
                         break;
                     case FLOATTYPE:
@@ -287,7 +289,7 @@ namespace API {
         if (table.size() == 0) {
             cout << "No matching data" << endl;
         } else {
-            cout << "Answer: " << endl;
+            cout << "Result: " << endl;
             vector<string>attrName = testCatalog->getAttributeName(tableName);
             for (vector<string>::iterator u = attrName.begin(); u != attrName.end(); ++u) {
                 cout << setw(19) << setiosflags(ios::left) << *u;
@@ -354,7 +356,6 @@ namespace API {
                       tup.push_back(ValueDetail(INTTYPE, val));
                       break;
                   case CHARTYPE:
-                      PARAM::Name(val);
                       tup.push_back(ValueDetail(CHARTYPE, val));
                       break;
                   case FLOATTYPE:
@@ -429,7 +430,6 @@ namespace API {
                         value.type = INTTYPE;
                         break;
                     case CHARTYPE:
-                        PARAM::Name(val);
                         value.type = CHARTYPE;
                         break;
                     case FLOATTYPE:
