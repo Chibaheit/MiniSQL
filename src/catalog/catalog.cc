@@ -301,7 +301,7 @@ bool Catalog::createIndex(string tableName, string attributeName, string indexNa
         if (itr->attrName == attributeName)
             itr->indexList.push_back(indexName);
     storeSchema();
-    
+
     Block *block = Buffer::access("index.cat", 0);
     char *data = block->data();
     int blockIndex = data[0] * 256 + data[1];
@@ -319,7 +319,7 @@ bool Catalog::createIndex(string tableName, string attributeName, string indexNa
     data[1] = blockIndex % 256;
     data[2] = offset / 256;
     data[3] = offset % 256;
-    
+
     return true;
 }
 
@@ -352,10 +352,10 @@ bool Catalog::dropIndex(string tableName, string indexName) {
                 break;
         }
     }
-    
+
     if (!find)
         return false;
-    
+
     Block *block = Buffer::access("index.cat", 0);
     char *data = block->data();
     int blockIndex = data[0] * 256 + data[1];
@@ -384,7 +384,7 @@ bool Catalog::dropIndex(string tableName, string indexName) {
             data[tmpOffset] = 0;
         }
     }
-    
+
     return storeSchema();
 }
 
@@ -451,6 +451,14 @@ vector<int> Catalog::getPrimaryOrUniquePosition(string tableName) {
       if (itr->unique || itr->primary) {
           res.push_back(itr - schema.attrDetailList.begin());
       }
+    }
+    return res;
+}
+vector<string> Catalog::getAttributeName(string tableName) {
+    vector<string> res;
+    loadSchema(tableName);
+    for (vector<AttrDetail>::iterator itr = schema.attrDetailList.begin(); itr != schema.attrDetailList.end(); itr++) {
+        res.push_back(itr->attrName); 
     }
     return res;
 }
