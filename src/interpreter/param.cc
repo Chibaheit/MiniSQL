@@ -70,6 +70,10 @@ namespace PARAM {
         return s;
     }
 
+    bool isBlank(char ch) {
+        return (ch == ' ' || ch == '\t');
+    }
+
     string rmSpaceAndBracket(string s) {
         string res = "";
         string rS = string(s.rbegin(), s.rend());
@@ -90,27 +94,35 @@ namespace PARAM {
             cout << "Syntax Error: " << e.what() << endl;
         }
         size_t st = 0, ed = s.length();
-        while (ed > 0 && s[ed - 1] == ' ') {
+        while (ed > 0 && isBlank(s[ed - 1])) {
           --ed;
         }
-        while (st < ed && s[st] == ' ') {
+        while (st < ed && isBlank(s[st])) {
           ++st;
         }
         bool space = true;
         for (size_t i = st; i < ed; i++) {
-            if (space && s[i] == ' ') {
+            if (space && isBlank(s[i])) {
                 continue;
             }
-            if (s[i] == ')' && res.length() > 1 && res[res.length() - 1] == ' ') {
+            if (s[i] == ')' && res.length() > 1 && isBlank(res[res.length() - 1])) {
                 res = res.substr(0, res.length() - 1);
             }
-            res += s[i];
-            space = (s[i] == ' ');
+            space = (isBlank(s[i]));
+            if (s[i] == ',' && i > 0 && isBlank(res[res.length() - 1])) {
+                res[res.length() - 1] = ',';
+                continue;
+            }
+            if (isBlank(s[i])) {
+                res += ' ';
+            } else {
+                res += s[i];
+            }
             if (s[i] == '(') {
-              if (res.length() > 2 && res[res.length() - 2] == ' ') {
+              if (res.length() > 2 && isBlank(res[res.length() - 2])) {
                   res.erase(res.begin() + res.length() - 2);
               }
-              if (i + 1 < ed && s[i + 1] == ' ') {
+              if (i + 1 < ed && isBlank(s[i + 1])) {
                   space = true;
                   continue;
               }

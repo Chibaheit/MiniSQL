@@ -8,6 +8,7 @@ namespace PARAM {
     int Int(std::string s);
     float Float(std::string s);
     std::string Name(std::string s);
+    bool isBlank(char ch);
     std::string rmSpaceAndBracket(std::string s);
     std::vector<std::string> Split(std::string& s, char separator = ' ');
 }
