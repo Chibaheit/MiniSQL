@@ -50,13 +50,13 @@ private:
     void save(string str, int &blockIndex, int &offset);
 
     void save(char ch, int &blockIndex, int &offset);
-    
+
     void save2(string str, int &blockIndex, int &offset);
-    
+
     void save2(char ch, int &blockIndex, int &offset);
 
     string loadStr(int &blockIndex, int &offset);
-    
+
     void clearSchema();
 
     Catalog() {clearSchema(); }
@@ -132,6 +132,8 @@ public:
     vector<attributeType> getAttributeType(string tableName, string queryName = "");
     // return primary or unique position
     vector<int> getPrimaryOrUniquePosition(string tableName);
+
+    vector<string> getAttributeName(string tableName);
 };
 
 #endif /* catalog_hpp */
