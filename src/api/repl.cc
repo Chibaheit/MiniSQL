@@ -9,9 +9,7 @@
 
 namespace REPL {
     void makeInstruction(string instruction) {
-        cout << instruction << endl;
         instruction = PARAM::rmSpaceAndBracket(instruction);
-        cout << instruction << endl;
         try {
             if (instruction.find("create table ") == 0) {
                 API::createTable(instruction);
@@ -30,7 +28,13 @@ namespace REPL {
             } else if (instruction == "quit") {
                 API::quit(instruction);
             } else if (instruction.find("execfile ") == 0) {
-                API::execfile(instruction);
+                string fileName = instruction.substr(9);
+                // cout << fileName << endl;
+                if (fileName.substr(fileName.length() - 4) == ".sql") {
+                    file(fileName);
+                } else {
+                    cout << "Error: Invalid argument." << endl;
+                }
             } else {
                 throw invalid_argument("Unknown sql script.");
             }

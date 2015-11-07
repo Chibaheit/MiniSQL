@@ -473,13 +473,4 @@ namespace API {
         cout << "Bye~" << endl;
         exit(0);
     }
-
-    void execfile(string instruction) {
-        // execfile fileName
-        string fileName = instruction.substr(9, instruction.length());
-        // cout << fileName << endl;
-        if (fileName.substr(fileName.length() - 4, fileName.length()) == ".sql") {
-            // cout << fileName << endl;
-        }
-    }
 }

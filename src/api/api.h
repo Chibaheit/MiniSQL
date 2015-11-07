@@ -20,8 +20,6 @@ namespace API {
 
     void quit(std::string instruction);
 
-    void execfile(std::string instruction);
-
 }
 
 #endif
