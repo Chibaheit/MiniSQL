@@ -33,3 +33,9 @@ log
 
 # cat
 *.cat
+
+# minisql execute
+minisql
+
+# test sql
+*.sql
