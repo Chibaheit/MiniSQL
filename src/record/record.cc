@@ -126,7 +126,7 @@ bool Record::loadTuple(Tuple &tuple, int &fromBlockIndex, int &fromOffset) {
                 tmp[2] = str.at(2);
                 tmp[3] = str.at(3);
                 float *floatData = new float;
-                memcpy(floatData, tmp, 4);         
+                memcpy(floatData, tmp, 4);
                 stringstream ss;
                 ss << *floatData;
                 tuple.push_back(ValueDetail(curType, ss.str()));
@@ -157,7 +157,7 @@ void Record::storeTuple(Tuple &tuple, int &fromBlockIndex, int &fromOffset) {
     string fileName = tableName + ".record";
     Block *block = Buffer::access(fileName, fromBlockIndex);
     char *data = block->data();
-    data[fromOffset++] = 1; 
+    data[fromOffset++] = 1;
     for (vector<ValueDetail>::iterator itr = tuple.begin(); itr != tuple.end(); itr++) {
         switch (itr->type) {
             case INTTYPE: {
@@ -308,10 +308,12 @@ bool Record::insert(Tuple &valueList, vector<int> primaryOrUniquePosition) {
             curBlockIndex++;
             curOffset = 0;
         }
-        if (curBlockIndex > blockIndex)
+        if (curBlockIndex > blockIndex) {
             break;
-        else if (curBlockIndex == blockIndex && curOffset >= offset)
+        }
+        else if (curBlockIndex == blockIndex && curOffset > offset) {
             break;
+        }
         Tuple curTuple;
         if (!loadTuple(curTuple, curBlockIndex, curOffset))
             continue;
@@ -375,14 +377,3 @@ void Record::select(vector<QueryDetail> &queryList, Table &table) {
             table.push_back(curTuple);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
